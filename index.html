@@ -60,25 +60,25 @@
 
   <script>
     let markerLocked = false; // Flag to indicate if marker is locked
-    let initialMarkerMatrix; // Initial marker position matrix
+    let initialCameraMatrix; // Initial camera position matrix
 
     // Function to start tracking
     function startTracking() {
       console.log('Start Tracking');
       markerLocked = true; // Lock marker position
-      initialMarkerMatrix = document.querySelector('a-marker').object3D.matrixWorld.clone(); // Save initial marker position
+      initialCameraMatrix = document.querySelector('[camera]').object3D.matrixWorld.clone(); // Save initial camera position
       document.querySelector('#overlay').style.display = 'none'; // Hide overlay after clicking
       document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button after clicking
     }
 
     // Function to calculate and display camera orientation
     function updateCameraOrientation() {
-      // Check if marker is locked and initial marker position is set
-      if (!markerLocked || !initialMarkerMatrix) return;
+      // Check if marker is locked and initial camera position is set
+      if (!markerLocked || !initialCameraMatrix) return;
 
       const camera = document.querySelector('[camera]');
       const cameraMatrix = camera.object3D.matrixWorld;
-      const relativeMatrix = new THREE.Matrix4().getInverse(initialMarkerMatrix).multiply(cameraMatrix);
+      const relativeMatrix = new THREE.Matrix4().getInverse(initialCameraMatrix).multiply(cameraMatrix);
       const rotation = new THREE.Euler().setFromRotationMatrix(relativeMatrix);
       const rotationDeg = {
         x: THREE.MathUtils.radToDeg(rotation.x),
@@ -90,7 +90,7 @@
       const cameraOrientationText = document.querySelector('#cameraOrientationText');
       cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
 
-      // Calculate direction based on camera orientation
+      // Calculate direction based on camera orientation relative to locked position
       let direction;
       if (rotationDeg.y < -45) {
         direction = 'Left';
@@ -128,10 +128,7 @@
     // Event listener for marker lost
     document.querySelector('a-marker').addEventListener('markerLost', () => {
       console.log('Marker Lost');
-      markerLocked = false; // Unlock marker position
-      initialMarkerMatrix = null; // Reset initial marker position
-      document.querySelector('#overlay').style.display = 'none'; // Hide overlay when marker is lost
-      document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button when marker is lost
+      markerFound = false; // Reset marker found flag
     });
   </script>
 </body>
