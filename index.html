@@ -60,6 +60,7 @@
 
   <script>
     let markerLocked = false; // Flag to indicate if marker is locked
+    let initialMarkerMatrix; // Initial marker position matrix
 
     // Wait for AR.js to be fully initialized
     document.querySelector('a-scene').addEventListener('loaded', () => {
@@ -72,21 +73,19 @@
       function startTracking() {
         console.log('Start Tracking');
         markerLocked = true; // Lock marker position
+        initialMarkerMatrix = marker.object3D.matrixWorld.clone(); // Save initial marker position
         overlay.style.display = 'none'; // Hide overlay after clicking
         startButton.setAttribute('visible', 'false'); // Hide start button after clicking
       }
 
       // Function to calculate and display camera orientation
       function updateCameraOrientation() {
-        // Check if marker is locked
-        if (!markerLocked) return;
+        // Check if marker is locked and initial marker position is set
+        if (!markerLocked || !initialMarkerMatrix) return;
 
         // Get camera and marker pose matrices
         const cameraMatrix = camera.object3D.matrixWorld;
-        const markerMatrix = marker.object3D.matrixWorld;
-
-        // Calculate relative pose matrix
-        const relativeMatrix = new THREE.Matrix4().getInverse(markerMatrix).multiply(cameraMatrix);
+        const relativeMatrix = new THREE.Matrix4().getInverse(initialMarkerMatrix).multiply(cameraMatrix);
 
         // Extract rotation components (Euler angles) from the relative pose matrix
         const rotation = new THREE.Euler().setFromRotationMatrix(relativeMatrix);
@@ -137,6 +136,7 @@
       marker.addEventListener('markerLost', () => {
         console.log('Marker Lost');
         markerLocked = false; // Unlock marker position
+        initialMarkerMatrix = null; // Reset initial marker position
         overlay.style.display = 'none'; // Hide overlay when marker is lost
         startButton.setAttribute('visible', 'false'); // Hide start button when marker is lost
 
@@ -151,6 +151,4 @@
       // Event listener for click on overlay
       overlay.addEventListener('click', startTracking);
     });
-  </script>
-</body>
-</html>
+  </script
