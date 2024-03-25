@@ -17,10 +17,21 @@
     </a-marker>
     <a-entity camera></a-entity>
 
+    <!-- Start button -->
+    <a-entity
+      id="startButton"
+      visible="false"
+      geometry="primitive: plane; width: 1; height: 0.5"
+      material="color: #4CC3D9"
+      position="0 0 -3"
+      text="value: Start; color: #000; align: center"
+      events="click: startTracking"
+    ></a-entity>
+
     <!-- Display camera orientation -->
     <a-text
       id="cameraOrientationText"
-      position="0 0 -1.5"
+      position="0 1 -3"
       color="white"
       align="center"
       scale="0.5 0.5 0.5"
@@ -30,7 +41,7 @@
     <!-- Display direction -->
     <a-text
       id="directionText"
-      position="0 0 -3"
+      position="0 0.5 -3"
       color="white"
       align="center"
       scale="0.5 0.5 0.5"
@@ -39,83 +50,18 @@
   </a-scene>
 
   <script>
+    let markerLocked = false; // Flag to indicate if marker is locked
+
     // Wait for AR.js to be fully initialized
     document.querySelector('a-scene').addEventListener('loaded', () => {
-      // Get camera and marker elements
-      const camera = document.querySelector('[camera]');
       const marker = document.querySelector('a-marker');
+      const startButton = document.querySelector('#startButton');
+      const camera = document.querySelector('[camera]');
 
       // Function to calculate and display camera orientation
       function updateCameraOrientation() {
+        // Check if marker is locked
+        if (!markerLocked) return;
+
         // Get camera and marker pose matrices
-        const cameraMatrix = camera.object3D.matrixWorld;
-        const markerMatrix = marker.object3D.matrixWorld;
-
-        // Calculate relative pose matrix
-        const relativeMatrix = new THREE.Matrix4().getInverse(markerMatrix).multiply(cameraMatrix);
-
-        // Extract rotation components (Euler angles) from the relative pose matrix
-        const rotation = new THREE.Euler().setFromRotationMatrix(relativeMatrix);
-
-        // Convert Euler angles to degrees
-        const rotationDeg = {
-          x: THREE.MathUtils.radToDeg(rotation.x),
-          y: THREE.MathUtils.radToDeg(rotation.y),
-          z: THREE.MathUtils.radToDeg(rotation.z)
-        };
-
-        // Update text element with camera orientation
-        const cameraOrientationText = document.querySelector('#cameraOrientationText');
-        cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
-
-        // Calculate angle between camera forward vector and marker-camera vector
-        const cameraForwardVector = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.object3D.quaternion);
-        const markerCameraVector = new THREE.Vector3().copy(camera.object3D.position).sub(marker.object3D.position).normalize();
-        const angle = cameraForwardVector.angleTo(markerCameraVector);
-
-        // Determine direction based on angle
-        let direction;
-        if (angle < Math.PI / 4) {
-          direction = 'Front';
-        } else if (angle > Math.PI / 4 && angle < (3 * Math.PI) / 4) {
-          direction = 'Right';
-        } else {
-          direction = 'Left';
-        }
-
-        // Update text element with direction
-        const directionText = document.querySelector('#directionText');
-        directionText.setAttribute('value', `Direction: ${direction}`);
-      }
-
-      // Render loop
-      function render() {
-        updateCameraOrientation();
-        requestAnimationFrame(render);
-      }
-
-      // Start rendering loop
-      render();
-
-      // Listen for marker found event
-      marker.addEventListener('markerFound', () => {
-        console.log('Marker Found');
-        // Update camera orientation when marker is found
-        updateCameraOrientation();
-      });
-
-      // Listen for marker lost event
-      marker.addEventListener('markerLost', () => {
-        console.log('Marker Lost');
-        // Clear camera orientation when marker is lost
-        const cameraOrientationText = document.querySelector('#cameraOrientationText');
-        cameraOrientationText.setAttribute('value', 'Marker Lost');
-
-        // Clear direction when marker is lost
-        const directionText = document.querySelector('#directionText');
-        directionText.setAttribute('value', 'Direction: ');
-      });
-    });
-  </script>
-</body>
-</html>
+        const cameraMatrix = camera.object3D.matrixWorl
