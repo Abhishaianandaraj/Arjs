@@ -9,11 +9,6 @@
   <a-scene embedded arjs>
     <a-marker preset="hiro">
       <!-- we use cors proxy to avoid cross-origin problems -->
-      <a-entity
-        position="0 0 0"
-        scale="0.05 0.05 0.05"
-        gltf-model="models/scene.gltf"
-      ></a-entity>
     </a-marker>
     <a-entity camera></a-entity>
 
@@ -64,4 +59,77 @@
         if (!markerLocked) return;
 
         // Get camera and marker pose matrices
-        const cameraMatrix = camera.object3D.matrixWorl
+        const cameraMatrix = camera.object3D.matrixWorld;
+        const markerMatrix = marker.object3D.matrixWorld;
+
+        // Calculate relative pose matrix
+        const relativeMatrix = new THREE.Matrix4().getInverse(markerMatrix).multiply(cameraMatrix);
+
+        // Extract rotation components (Euler angles) from the relative pose matrix
+        const rotation = new THREE.Euler().setFromRotationMatrix(relativeMatrix);
+
+        // Convert Euler angles to degrees
+        const rotationDeg = {
+          x: THREE.MathUtils.radToDeg(rotation.x),
+          y: THREE.MathUtils.radToDeg(rotation.y),
+          z: THREE.MathUtils.radToDeg(rotation.z)
+        };
+
+        // Update text element with camera orientation
+        const cameraOrientationText = document.querySelector('#cameraOrientationText');
+        cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
+
+        // Calculate direction based on camera orientation
+        let direction;
+        if (rotationDeg.y < -45) {
+          direction = 'Left';
+        } else if (rotationDeg.y > 45) {
+          direction = 'Right';
+        } else {
+          direction = 'Front';
+        }
+
+        // Update text element with direction
+        const directionText = document.querySelector('#directionText');
+        directionText.setAttribute('value', `Direction: ${direction}`);
+      }
+
+      // Render loop
+      function render() {
+        updateCameraOrientation();
+        requestAnimationFrame(render);
+      }
+
+      // Start rendering loop
+      render();
+
+      // Event listener for marker found
+      marker.addEventListener('markerFound', () => {
+        console.log('Marker Found');
+        startButton.setAttribute('visible', 'true'); // Show start button when marker is found
+      });
+
+      // Event listener for start button click
+      startButton.addEventListener('click', () => {
+        console.log('Start Tracking');
+        markerLocked = true; // Lock marker position
+        startButton.setAttribute('visible', 'false'); // Hide start button after clicking
+      });
+
+      // Event listener for marker lost
+      marker.addEventListener('markerLost', () => {
+        console.log('Marker Lost');
+        markerLocked = false; // Unlock marker position
+        startButton.setAttribute('visible', 'false'); // Hide start button when marker is lost
+
+        // Clear camera orientation and direction text
+        const cameraOrientationText = document.querySelector('#cameraOrientationText');
+        cameraOrientationText.setAttribute('value', 'Camera Orientation:');
+
+        const directionText = document.querySelector('#directionText');
+        directionText.setAttribute('value', 'Direction:');
+      });
+    });
+  </script>
+</body>
+</html>
