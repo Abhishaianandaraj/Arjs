@@ -55,100 +55,80 @@
     ></a-text>
 
     <!-- Overlay for click event -->
-    <div id="overlay"></div>
+    <div id="overlay" onclick="startTracking()"></div>
   </a-scene>
 
   <script>
     let markerLocked = false; // Flag to indicate if marker is locked
     let initialMarkerMatrix; // Initial marker position matrix
 
-    // Wait for AR.js to be fully initialized
-    document.querySelector('a-scene').addEventListener('loaded', () => {
-      const marker = document.querySelector('a-marker');
-      const startButton = document.querySelector('#startButton');
+    // Function to start tracking
+    function startTracking() {
+      console.log('Start Tracking');
+      markerLocked = true; // Lock marker position
+      initialMarkerMatrix = document.querySelector('a-marker').object3D.matrixWorld.clone(); // Save initial marker position
+      document.querySelector('#overlay').style.display = 'none'; // Hide overlay after clicking
+      document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button after clicking
+    }
+
+    // Function to calculate and display camera orientation
+    function updateCameraOrientation() {
+      // Check if marker is locked and initial marker position is set
+      if (!markerLocked || !initialMarkerMatrix) return;
+
       const camera = document.querySelector('[camera]');
-      const overlay = document.querySelector('#overlay');
+      const cameraMatrix = camera.object3D.matrixWorld;
+      const relativeMatrix = new THREE.Matrix4().getInverse(initialMarkerMatrix).multiply(cameraMatrix);
+      const rotation = new THREE.Euler().setFromRotationMatrix(relativeMatrix);
+      const rotationDeg = {
+        x: THREE.MathUtils.radToDeg(rotation.x),
+        y: THREE.MathUtils.radToDeg(rotation.y),
+        z: THREE.MathUtils.radToDeg(rotation.z)
+      };
 
-      // Function to start tracking
-      function startTracking() {
-        console.log('Start Tracking');
-        markerLocked = true; // Lock marker position
-        initialMarkerMatrix = marker.object3D.matrixWorld.clone(); // Save initial marker position
-        overlay.style.display = 'none'; // Hide overlay after clicking
-        startButton.setAttribute('visible', 'false'); // Hide start button after clicking
+      // Update text element with camera orientation
+      const cameraOrientationText = document.querySelector('#cameraOrientationText');
+      cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
+
+      // Calculate direction based on camera orientation
+      let direction;
+      if (rotationDeg.y < -45) {
+        direction = 'Left';
+      } else if (rotationDeg.y > 45) {
+        direction = 'Right';
+      } else {
+        direction = 'Front';
       }
 
-      // Function to calculate and display camera orientation
-      function updateCameraOrientation() {
-        // Check if marker is locked and initial marker position is set
-        if (!markerLocked || !initialMarkerMatrix) return;
+      // Update text element with direction
+      const directionText = document.querySelector('#directionText');
+      directionText.setAttribute('value', `Direction: ${direction}`);
+    }
 
-        // Get camera and marker pose matrices
-        const cameraMatrix = camera.object3D.matrixWorld;
-        const relativeMatrix = new THREE.Matrix4().getInverse(initialMarkerMatrix).multiply(cameraMatrix);
+    // Render loop
+    function render() {
+      updateCameraOrientation();
+      requestAnimationFrame(render);
+    }
 
-        // Extract rotation components (Euler angles) from the relative pose matrix
-        const rotation = new THREE.Euler().setFromRotationMatrix(relativeMatrix);
+    // Start rendering loop
+    render();
 
-        // Convert Euler angles to degrees
-        const rotationDeg = {
-          x: THREE.MathUtils.radToDeg(rotation.x),
-          y: THREE.MathUtils.radToDeg(rotation.y),
-          z: THREE.MathUtils.radToDeg(rotation.z)
-        };
-
-        // Update text element with camera orientation
-        const cameraOrientationText = document.querySelector('#cameraOrientationText');
-        cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
-
-        // Calculate direction based on camera orientation
-        let direction;
-        if (rotationDeg.y < -45) {
-          direction = 'Left';
-        } else if (rotationDeg.y > 45) {
-          direction = 'Right';
-        } else {
-          direction = 'Front';
-        }
-
-        // Update text element with direction
-        const directionText = document.querySelector('#directionText');
-        directionText.setAttribute('value', `Direction: ${direction}`);
-      }
-
-      // Render loop
-      function render() {
-        updateCameraOrientation();
-        requestAnimationFrame(render);
-      }
-
-      // Start rendering loop
-      render();
-
-      // Event listener for marker found
-      marker.addEventListener('markerFound', () => {
-        console.log('Marker Found');
-        overlay.style.display = 'block'; // Show overlay when marker is found
-        startButton.setAttribute('visible', 'true'); // Show start button when marker is found
-      });
-
-      // Event listener for marker lost
-      marker.addEventListener('markerLost', () => {
-        console.log('Marker Lost');
-        markerLocked = false; // Unlock marker position
-        initialMarkerMatrix = null; // Reset initial marker position
-        overlay.style.display = 'none'; // Hide overlay when marker is lost
-        startButton.setAttribute('visible', 'false'); // Hide start button when marker is lost
-
-        // Clear camera orientation and direction text
-        const cameraOrientationText = document.querySelector('#cameraOrientationText');
-        cameraOrientationText.setAttribute('value', 'Camera Orientation:');
-
-        const directionText = document.querySelector('#directionText');
-        directionText.setAttribute('value', 'Direction:');
-      });
-
-      // Event listener for click on overlay
-      overlay.addEventListener('click', startTracking);
+    // Event listener for marker found
+    document.querySelector('a-marker').addEventListener('markerFound', () => {
+      console.log('Marker Found');
+      document.querySelector('#overlay').style.display = 'block'; // Show overlay when marker is found
+      document.querySelector('#startButton').setAttribute('visible', 'true'); // Show start button when marker is found
     });
-  </script
+
+    // Event listener for marker lost
+    document.querySelector('a-marker').addEventListener('markerLost', () => {
+      console.log('Marker Lost');
+      markerLocked = false; // Unlock marker position
+      initialMarkerMatrix = null; // Reset initial marker position
+      document.querySelector('#overlay').style.display = 'none'; // Hide overlay when marker is lost
+      document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button when marker is lost
+    });
+  </script>
+</body>
+</html>
