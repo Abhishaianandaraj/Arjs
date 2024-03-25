@@ -32,7 +32,6 @@
       material="color: #4CC3D9; transparent: false"
       position="0 0.5 -3"
       text="value: Start; color: #000; align: center"
-      onclick="startTracking()"
     ></a-entity>
 
     <!-- Display camera orientation -->
@@ -56,7 +55,7 @@
     ></a-text>
 
     <!-- Overlay for click event -->
-    <div id="overlay"></div>
+    <div id="overlay" onclick="startTracking()"></div>
   </a-scene>
 
   <script>
@@ -129,3 +128,4 @@
     });
   </script>
 </body>
+</html>
