@@ -26,6 +26,16 @@
       scale="0.5 0.5 0.5"
       value="Camera Orientation: "
     ></a-text>
+
+    <!-- Display direction -->
+    <a-text
+      id="directionText"
+      position="0 0 -3"
+      color="white"
+      align="center"
+      scale="0.5 0.5 0.5"
+      value="Direction: "
+    ></a-text>
   </a-scene>
 
   <script>
@@ -58,8 +68,24 @@
         const cameraOrientationText = document.querySelector('#cameraOrientationText');
         cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
 
-        // Log orientation to the console
-        console.log('Camera Orientation:', rotationDeg);
+        // Calculate angle between camera forward vector and marker-camera vector
+        const cameraForwardVector = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.object3D.quaternion);
+        const markerCameraVector = new THREE.Vector3().copy(camera.object3D.position).sub(marker.object3D.position).normalize();
+        const angle = cameraForwardVector.angleTo(markerCameraVector);
+
+        // Determine direction based on angle
+        let direction;
+        if (angle < Math.PI / 4) {
+          direction = 'Front';
+        } else if (angle > Math.PI / 4 && angle < (3 * Math.PI) / 4) {
+          direction = 'Right';
+        } else {
+          direction = 'Left';
+        }
+
+        // Update text element with direction
+        const directionText = document.querySelector('#directionText');
+        directionText.setAttribute('value', `Direction: ${direction}`);
       }
 
       // Render loop
@@ -84,6 +110,10 @@
         // Clear camera orientation when marker is lost
         const cameraOrientationText = document.querySelector('#cameraOrientationText');
         cameraOrientationText.setAttribute('value', 'Marker Lost');
+
+        // Clear direction when marker is lost
+        const directionText = document.querySelector('#directionText');
+        directionText.setAttribute('value', 'Direction: ');
       });
     });
   </script>
