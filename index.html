@@ -32,6 +32,7 @@
       material="color: #4CC3D9; transparent: false"
       position="0 0.5 -3"
       text="value: Start; color: #000; align: center"
+      onclick="lockOrientation()"
     ></a-entity>
 
     <!-- Display camera orientation -->
@@ -41,7 +42,7 @@
       color="white"
       align="center"
       scale="0.5 0.5 0.5"
-      value="Camera Orientation: "
+      value=""
     ></a-text>
 
     <!-- Display direction -->
@@ -51,7 +52,7 @@
       color="white"
       align="center"
       scale="0.5 0.5 0.5"
-      value="Direction: "
+      value=""
     ></a-text>
 
     <!-- Overlay for click event -->
@@ -59,22 +60,31 @@
   </a-scene>
 
   <script>
-    let markerLocked = false; // Flag to indicate if marker is locked
+    let markerFound = false; // Flag to indicate if marker is found
+    let orientationLocked = false; // Flag to indicate if orientation is locked
     let initialCameraMatrix; // Initial camera position matrix
 
     // Function to start tracking
     function startTracking() {
       console.log('Start Tracking');
-      markerLocked = true; // Lock marker position
+      if (markerFound && !orientationLocked) {
+        document.querySelector('#overlay').style.display = 'none'; // Hide overlay after clicking
+        document.querySelector('#startButton').setAttribute('visible', 'true'); // Show start button
+      }
+    }
+
+    // Function to lock the orientation
+    function lockOrientation() {
+      console.log('Orientation Locked');
+      orientationLocked = true;
       initialCameraMatrix = document.querySelector('[camera]').object3D.matrixWorld.clone(); // Save initial camera position
-      document.querySelector('#overlay').style.display = 'none'; // Hide overlay after clicking
-      document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button after clicking
+      document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button
     }
 
     // Function to calculate and display camera orientation
     function updateCameraOrientation() {
-      // Check if marker is locked and initial camera position is set
-      if (!markerLocked || !initialCameraMatrix) return;
+      // Check if orientation is locked and initial camera position is set
+      if (!orientationLocked || !initialCameraMatrix) return;
 
       const camera = document.querySelector('[camera]');
       const cameraMatrix = camera.object3D.matrixWorld;
@@ -115,20 +125,12 @@
     render();
 
     // Event listener for marker found
-    let markerFound = false; // Flag to indicate if marker is found
     document.querySelector('a-marker').addEventListener('markerFound', () => {
       if (!markerFound) {
         console.log('Marker Found');
-        document.querySelector('#overlay').style.display = 'block'; // Show overlay when marker is found
-        document.querySelector('#startButton').setAttribute('visible', 'true'); // Show start button when marker is found
         markerFound = true;
+        startTracking();
       }
-    });
-
-    // Event listener for marker lost
-    document.querySelector('a-marker').addEventListener('markerLost', () => {
-      console.log('Marker Lost');
-      markerFound = false; // Reset marker found flag
     });
   </script>
 </body>
