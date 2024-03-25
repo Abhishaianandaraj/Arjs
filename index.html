@@ -32,7 +32,7 @@
       material="color: #4CC3D9; transparent: false"
       position="0 0.5 -3"
       text="value: Start; color: #000; align: center"
-      onclick="lockOrientation()"
+      onclick="startTracking()"
     ></a-entity>
 
     <!-- Display camera orientation -->
@@ -56,7 +56,7 @@
     ></a-text>
 
     <!-- Overlay for click event -->
-    <div id="overlay" onclick="startTracking()"></div>
+    <div id="overlay"></div>
   </a-scene>
 
   <script>
@@ -66,19 +66,13 @@
 
     // Function to start tracking
     function startTracking() {
-      console.log('Start Tracking');
       if (markerFound && !orientationLocked) {
+        console.log('Start Tracking');
         document.querySelector('#overlay').style.display = 'none'; // Hide overlay after clicking
-        document.querySelector('#startButton').setAttribute('visible', 'true'); // Show start button
+        document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button after clicking
+        orientationLocked = true;
+        initialCameraMatrix = document.querySelector('[camera]').object3D.matrixWorld.clone(); // Save initial camera position
       }
-    }
-
-    // Function to lock the orientation
-    function lockOrientation() {
-      console.log('Orientation Locked');
-      orientationLocked = true;
-      initialCameraMatrix = document.querySelector('[camera]').object3D.matrixWorld.clone(); // Save initial camera position
-      document.querySelector('#startButton').setAttribute('visible', 'false'); // Hide start button
     }
 
     // Function to calculate and display camera orientation
@@ -129,9 +123,9 @@
       if (!markerFound) {
         console.log('Marker Found');
         markerFound = true;
-        startTracking();
+        document.querySelector('#overlay').style.display = 'block'; // Show overlay when marker is found
+        document.querySelector('#startButton').setAttribute('visible', 'true'); // Show start button when marker is found
       }
     });
   </script>
 </body>
-</html>
