@@ -115,10 +115,14 @@
     render();
 
     // Event listener for marker found
+    let markerFound = false; // Flag to indicate if marker is found
     document.querySelector('a-marker').addEventListener('markerFound', () => {
-      console.log('Marker Found');
-      document.querySelector('#overlay').style.display = 'block'; // Show overlay when marker is found
-      document.querySelector('#startButton').setAttribute('visible', 'true'); // Show start button when marker is found
+      if (!markerFound) {
+        console.log('Marker Found');
+        document.querySelector('#overlay').style.display = 'block'; // Show overlay when marker is found
+        document.querySelector('#startButton').setAttribute('visible', 'true'); // Show start button when marker is found
+        markerFound = true;
+      }
     });
 
     // Event listener for marker lost
