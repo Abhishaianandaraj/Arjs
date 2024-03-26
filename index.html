@@ -14,35 +14,30 @@
       background: rgba(0, 0, 0, 0);
       z-index: 9999;
     }
+    #startButton {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px; /* Adjust button width */
+      height: 50px; /* Adjust button height */
+      background-color: #4CC3D9;
+      color: #000;
+      text-align: center;
+      line-height: 50px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: none;
+    }
   </style>
 </head>
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
-    <a-marker preset="hiro"></a-marker>
+    <a-marker preset="hiro">
+      <!-- Position the button relative to the marker -->
+      <a-entity id="startButton" visible="false" text="value: Start"></a-entity>
+    </a-marker>
     <a-entity camera></a-entity>
-
-    <a-entity
-      id="startButton"
-      visible="false"
-      geometry="primitive: plane; width: 2; height: 1"
-      material="color: #4CC3D9; transparent: false"
-      position="0 0.5 -3"
-      text="value: Start; color: #000; align: center"
-    ></a-entity>
-    <a-entity
-          position="0 0 0"
-          scale="0.05 0.05 0.05"
-          gltf-model="models/scene.gltf"
-          id="placedObject"
-     ></a-entity>
-    <a-text
-      id="cameraOrientationText"
-      position="0 1 -3"
-      color="white"
-      align="center"
-      scale="0.5 0.5 0.5"
-      value="Camera Orientation: "
-    ></a-text>
 
     <div id="overlay"></div>
   </a-scene>
@@ -53,39 +48,13 @@
 
       const marker = document.querySelector('a-marker');
       const startButton = document.querySelector('#startButton');
-      const camera = document.querySelector('[camera]');
       const overlay = document.querySelector('#overlay');
-      const cameraOrientationText = document.querySelector('#cameraOrientationText');
-      const placedObject = document.querySelector('#placedObject');
 
       function startTracking() {
         markerLocked = true;
         overlay.style.display = 'none';
         startButton.setAttribute('visible', 'false');
-        placedObject.setAttribute('visible', 'true'); // Show the placed object
       }
-
-      function updateCameraOrientation() {
-        if (!markerLocked) return;
-
-        const cameraMatrix = camera.object3D.matrixWorld;
-        const markerMatrix = marker.object3D.matrixWorld;
-        const relativeMatrix = new THREE.Matrix4().getInverse(markerMatrix).multiply(cameraMatrix);
-        const rotation = new THREE.Euler().setFromRotationMatrix(relativeMatrix);
-        const rotationDeg = {
-          x: THREE.MathUtils.radToDeg(rotation.x),
-          y: THREE.MathUtils.radToDeg(rotation.y),
-          z: THREE.MathUtils.radToDeg(rotation.z)
-        };
-
-        cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
-      }
-
-      function render() {
-        updateCameraOrientation();
-        requestAnimationFrame(render);
-      }
-      render();
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
@@ -96,7 +65,6 @@
         markerLocked = false;
         overlay.style.display = 'none';
         startButton.setAttribute('visible', 'false');
-        placedObject.setAttribute('visible', 'false'); // Hide the placed object
       });
 
       overlay.addEventListener('click', startTracking);
