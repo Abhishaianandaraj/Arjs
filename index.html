@@ -11,65 +11,72 @@
       width: 100%;
       height: 100%;
       display: none;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0);
       z-index: 9999;
-    }
-
-    #placeButton {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 120px;
-      height: 50px;
-      background-color: #4CC3D9;
-      border: none;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      outline: none;
-      display: none;
     }
   </style>
 </head>
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
-    <a-marker preset="hiro">
-      <a-entity
-        id="gltfModel"
-        position="0 0 0"
-        scale="0.05 0.05 0.05"
-        gltf-model="models/scene.gltf"
-        visible="false"
-      ></a-entity>
-    </a-marker>
+    <a-marker preset="hiro"></a-marker>
     <a-entity camera></a-entity>
 
-    <div id="overlay"></div>
+    <a-entity
+      id="startButton"
+      visible="false"
+      geometry="primitive: plane; width: 1; height: 0.5"
+      material="color: #4CC3D9; transparent: false"
+      position="0 0.5 -3"
+      text="value: Start; color: #000; align: center"
+    ></a-entity>
 
-    <button id="placeButton">Place Model</button>
+    <a-entity
+      id="gltfModel"
+      scale="0.05 0.05 0.05"
+      gltf-model="models/scene.gltf"
+      visible="false"
+    ></a-entity>
+
+    <div id="overlay"></div>
   </a-scene>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const marker = document.querySelector('a-marker');
+      const startButton = document.querySelector('#startButton');
       const overlay = document.querySelector('#overlay');
-      const placeButton = document.querySelector('#placeButton');
       const gltfModel = document.querySelector('#gltfModel');
+      let markerPosition;
+
+      function startTracking() {
+        overlay.style.display = 'none';
+        startButton.setAttribute('visible', 'false');
+      }
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
-        placeButton.style.display = 'block';
+        startButton.setAttribute('visible', 'true');
       });
 
       marker.addEventListener('markerLost', () => {
         overlay.style.display = 'none';
-        placeButton.style.display = 'none';
-        gltfModel.setAttribute('visible', 'false');
+        startButton.setAttribute('visible', 'false');
       });
 
-      placeButton.addEventListener('click', () => {
-        gltfModel.setAttribute('visible', 'true');
+      overlay.addEventListener('click', () => {
+        // Record the position of the marker
+        markerPosition = marker.object3D.position.clone();
+        startTracking();
+      });
+
+      startButton.addEventListener('click', () => {
+        if (markerPosition) {
+          // Set the position of the GLTF model to the recorded position
+          gltfModel.setAttribute('position', `${markerPosition.x} ${markerPosition.y} ${markerPosition.z}`);
+          gltfModel.setAttribute('visible', 'true');
+        } else {
+          alert('Please click the button only after placing the marker.');
+        }
       });
     });
   </script>
