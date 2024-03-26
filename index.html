@@ -11,8 +11,8 @@
       width: 100%;
       height: 100%;
       display: none;
-      background: rgba(0, 0, 0, 0); /* Transparent background */
-      z-index: 9999; /* Ensure it's above the AR scene */
+      background: rgba(0, 0, 0, 0);
+      z-index: 9999;
     }
   </style>
 </head>
@@ -21,7 +21,6 @@
     <a-marker preset="hiro"></a-marker>
     <a-entity camera></a-entity>
 
-    <!-- Start button -->
     <a-entity
       id="startButton"
       visible="false"
@@ -31,7 +30,6 @@
       text="value: Start; color: #000; align: center"
     ></a-entity>
 
-    <!-- Display camera orientation -->
     <a-text
       id="cameraOrientationText"
       position="0 1 -3"
@@ -41,13 +39,12 @@
       value="Camera Orientation: "
     ></a-text>
 
-    <!-- Overlay for click event -->
     <div id="overlay"></div>
   </a-scene>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      let markerLocked = false; // Flag to indicate if marker is locked
+      let markerLocked = false;
 
       const marker = document.querySelector('a-marker');
       const startButton = document.querySelector('#startButton');
@@ -55,14 +52,12 @@
       const overlay = document.querySelector('#overlay');
       const cameraOrientationText = document.querySelector('#cameraOrientationText');
 
-      // Function to start tracking
       function startTracking() {
-        markerLocked = true; // Lock marker position
-        overlay.style.display = 'none'; // Hide overlay after clicking
-        startButton.setAttribute('visible', 'false'); // Hide start button after clicking
+        markerLocked = true;
+        overlay.style.display = 'none';
+        startButton.setAttribute('visible', 'false');
       }
 
-      // Function to calculate and display camera orientation
       function updateCameraOrientation() {
         if (!markerLocked) return;
 
@@ -79,46 +74,38 @@
         cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
       }
 
-      // Render loop
       function render() {
         updateCameraOrientation();
         requestAnimationFrame(render);
       }
       render();
 
-      // Event listener for marker found
       marker.addEventListener('markerFound', () => {
-        overlay.style.display = 'block'; // Show overlay when marker is found
-        startButton.setAttribute('visible', 'true'); // Show start button when marker is found
+        overlay.style.display = 'block';
+        startButton.setAttribute('visible', 'true');
       });
 
-      // Event listener for marker lost
       marker.addEventListener('markerLost', () => {
-        markerLocked = false; // Unlock marker position
-        overlay.style.display = 'none'; // Hide overlay when marker is lost
-        startButton.setAttribute('visible', 'false'); // Hide start button when marker is lost
+        markerLocked = false;
+        overlay.style.display = 'none';
+        startButton.setAttribute('visible', 'false');
       });
 
-      // Event listener for click on overlay
       overlay.addEventListener('click', startTracking);
 
-      // Event listener for click on start button
       startButton.addEventListener('click', () => {
         const cameraOrientation = cameraOrientationText.getAttribute('value');
         const file = new Blob([cameraOrientation], { type: 'text/plain' });
         const fileURL = URL.createObjectURL(file);
 
-        // Create a temporary anchor element to trigger the download
         const tempAnchor = document.createElement('a');
         tempAnchor.href = fileURL;
         tempAnchor.setAttribute('download', 'camera_orientation.txt');
         tempAnchor.style.display = 'none';
         document.body.appendChild(tempAnchor);
 
-        // Trigger the click event on the anchor element
         tempAnchor.click();
 
-        // Clean up
         document.body.removeChild(tempAnchor);
       });
     });
