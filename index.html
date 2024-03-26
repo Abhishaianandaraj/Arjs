@@ -42,6 +42,10 @@
       marker.addEventListener('markerLost', () => {
         overlay.style.display = 'none';
       });
+      
+      gltfModel.addEventListener('model-loaded', () => {
+        console.log('Model placed at position:', gltfModel.object3D.position);
+      });
     });
   </script>
 </body>
