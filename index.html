@@ -67,6 +67,7 @@
         // Record the position of the marker
         markerPosition = marker.object3D.position.clone();
         startTracking();
+        console.log(`${markerPosition.x} ${markerPosition.y} ${markerPosition.z}`);
       });
 
       startButton.addEventListener('click', () => {
