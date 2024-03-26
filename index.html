@@ -29,7 +29,12 @@
       position="0 0.5 -3"
       text="value: Start; color: #000; align: center"
     ></a-entity>
-
+    <a-entity
+          position="0 0 0"
+          scale="0.05 0.05 0.05"
+          gltf-model="models/scene.gltf"
+          id="placedObject"
+     ></a-entity>
     <a-text
       id="cameraOrientationText"
       position="0 1 -3"
@@ -51,11 +56,13 @@
       const camera = document.querySelector('[camera]');
       const overlay = document.querySelector('#overlay');
       const cameraOrientationText = document.querySelector('#cameraOrientationText');
+      const placedObject = document.querySelector('#placedObject');
 
       function startTracking() {
         markerLocked = true;
         overlay.style.display = 'none';
         startButton.setAttribute('visible', 'false');
+        placedObject.setAttribute('visible', 'true'); // Show the placed object
       }
 
       function updateCameraOrientation() {
@@ -89,25 +96,10 @@
         markerLocked = false;
         overlay.style.display = 'none';
         startButton.setAttribute('visible', 'false');
+        placedObject.setAttribute('visible', 'false'); // Hide the placed object
       });
 
       overlay.addEventListener('click', startTracking);
-
-      startButton.addEventListener('click', () => {
-        const cameraOrientation = cameraOrientationText.getAttribute('value');
-        const file = new Blob([cameraOrientation], { type: 'text/plain' });
-        const fileURL = URL.createObjectURL(file);
-
-        const tempAnchor = document.createElement('a');
-        tempAnchor.href = fileURL;
-        tempAnchor.setAttribute('download', 'camera_orientation.txt');
-        tempAnchor.style.display = 'none';
-        document.body.appendChild(tempAnchor);
-
-        tempAnchor.click();
-
-        document.body.removeChild(tempAnchor);
-      });
     });
   </script>
 </body>
