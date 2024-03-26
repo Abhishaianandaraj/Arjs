@@ -51,6 +51,15 @@
       gltfModel.addEventListener('model-loaded', () => {
         console.log('Model placed at position:', gltfModel.object3D.position);
         console.log('Marker placed at position:', marker.object3D.position);
+
+        setInterval(() => {
+          console.log('Model position updated:', gltfModel.object3D.position);
+        }, 1000); // Update every 1 second
+      });
+      setInterval(() => {
+          console.log('Marker position updated:', marker.object3D.position);
+        }, 1000); // Update every 1 second
+      });
       });
     });
   </script>
