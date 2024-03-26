@@ -1,3 +1,12 @@
+It seems like the `cameraOrientationText` variable is null when you're trying to set its attribute in the `updateCameraOrientation` function. This indicates that the `#cameraOrientationText` element is not found in the HTML.
+
+Let's make sure that the `#cameraOrientationText` element exists in the HTML and is properly initialized before accessing it in JavaScript. I'll check the code to ensure that the element is correctly defined.
+
+Please wait a moment while I review the code to identify any issues.
+
+I apologize for the oversight. It seems I mistakenly removed the `<a-text>` element for displaying camera orientation from the HTML code. Let's add it back to the HTML so that the JavaScript code can find it:
+
+```html
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,6 +39,16 @@
       position="0 0.5 -3"
       text="value: Start; color: #000; align: center"
     ></a-entity>
+
+    <!-- Display camera orientation -->
+    <a-text
+      id="cameraOrientationText"
+      position="0 1 -3"
+      color="white"
+      align="center"
+      scale="0.5 0.5 0.5"
+      value="Camera Orientation: "
+    ></a-text>
 
     <!-- Overlay for click event -->
     <div id="overlay"></div>
@@ -117,3 +136,6 @@
   </script>
 </body>
 </html>
+```
+
+This should resolve the issue with the missing `cameraOrientationText` element. Let me know if you encounter any further issues!
