@@ -24,10 +24,10 @@
       const gltfModel = document.querySelector('#gltfModel');
       const camera = document.querySelector('a-camera');
 
-      if (marker && gltfModel && camera) {
+      if (marker && gltfModel) {
         console.log('Marker:', marker.object3D.position);
         console.log('Model:', gltfModel.object3D.position);
-        console.log('Camera:', camera.object3D.position);
+        //console.log('Camera:', camera.object3D.position);
       } else {
         console.error('One or more elements not found.');
       }
