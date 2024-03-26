@@ -105,11 +105,21 @@
       // Event listener for click on start button
       startButton.addEventListener('click', () => {
         const cameraOrientation = cameraOrientationText.getAttribute('value');
-        const blob = new Blob([cameraOrientation], { type: 'text/plain' });
-        const anchor = document.createElement('a');
-        anchor.href = URL.createObjectURL(blob);
-        anchor.download = 'camera_orientation.txt';
-        anchor.click();
+        const file = new Blob([cameraOrientation], { type: 'text/plain' });
+        const fileURL = URL.createObjectURL(file);
+
+        // Create a temporary anchor element to trigger the download
+        const tempAnchor = document.createElement('a');
+        tempAnchor.href = fileURL;
+        tempAnchor.setAttribute('download', 'camera_orientation.txt');
+        tempAnchor.style.display = 'none';
+        document.body.appendChild(tempAnchor);
+
+        // Trigger the click event on the anchor element
+        tempAnchor.click();
+
+        // Clean up
+        document.body.removeChild(tempAnchor);
       });
     });
   </script>
