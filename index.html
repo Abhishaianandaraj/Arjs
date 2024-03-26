@@ -1,16 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <title>AR.js Marker-Based Example</title>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      background: rgba(0, 0, 0, 0.5); /* Transparent background */
+      z-index: 9999; /* Ensure it's above the AR scene */
+    }
+
     #placeButton {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 120px;
-      height: 50px;
+      padding: 10px 20px;
       background-color: #4CC3D9;
       border: none;
       color: white;
@@ -34,32 +46,38 @@
     </a-marker>
     <a-entity camera></a-entity>
 
+    <!-- Overlay for click event -->
+    <div id="overlay"></div>
+
     <!-- Place button -->
-    <button id="placeButton" onclick="handleButtonClick()">Place Model</button>
+    <button id="placeButton">Place Model</button>
   </a-scene>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const marker = document.querySelector('a-marker');
+      const overlay = document.querySelector('#overlay');
       const placeButton = document.querySelector('#placeButton');
       const gltfModel = document.querySelector('#gltfModel');
 
       // Event listener for marker found
       marker.addEventListener('markerFound', () => {
+        overlay.style.display = 'block'; // Show overlay when marker is found
         placeButton.style.display = 'block'; // Show place button when marker is found
       });
 
       // Event listener for marker lost
       marker.addEventListener('markerLost', () => {
+        overlay.style.display = 'none'; // Hide overlay when marker is lost
         placeButton.style.display = 'none'; // Hide place button when marker is lost
         gltfModel.setAttribute('visible', 'false'); // Hide GLTF model when marker is lost
       });
-    });
 
-    function handleButtonClick() {
-      const gltfModel = document.querySelector('#gltfModel');
-      gltfModel.setAttribute('visible', 'true'); // Show GLTF model when button is clicked
-    }
+      // Event listener for click on place button
+      placeButton.addEventListener('click', () => {
+        gltfModel.setAttribute('visible', 'true'); // Show GLTF model when button is clicked
+      });
+    });
   </script>
 </body>
 </html>
