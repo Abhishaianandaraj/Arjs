@@ -28,6 +28,7 @@
       cursor: pointer;
       border-radius: 5px;
       border: none;
+      visibility: hidden; /* Initially hidden */
     }
   </style>
 </head>
@@ -35,7 +36,7 @@
   <a-scene embedded arjs>
     <a-marker preset="hiro">
       <!-- Position the button relative to the marker -->
-      <a-entity id="startButton" visible="false" text="value: Start"></a-entity>
+      <a-entity id="startButton" text="value: Start"></a-entity>
     </a-marker>
     <a-entity camera></a-entity>
 
@@ -44,30 +45,36 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      let markerLocked = false;
+      let markerDetected = false;
 
       const marker = document.querySelector('a-marker');
       const startButton = document.querySelector('#startButton');
       const overlay = document.querySelector('#overlay');
 
       function startTracking() {
-        markerLocked = true;
+        markerDetected = true;
         overlay.style.display = 'none';
-        startButton.setAttribute('visible', 'false');
+        startButton.style.visibility = 'visible'; // Show the button
+      }
+
+      function handleClick() {
+        // Handle button click event
+        console.log('Button clicked!');
+        // Add your functionality here
       }
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
-        startButton.setAttribute('visible', 'true');
       });
 
       marker.addEventListener('markerLost', () => {
-        markerLocked = false;
+        markerDetected = false;
         overlay.style.display = 'none';
-        startButton.setAttribute('visible', 'false');
+        startButton.style.visibility = 'hidden'; // Hide the button
       });
 
       overlay.addEventListener('click', startTracking);
+      startButton.addEventListener('click', handleClick);
     });
   </script>
 </body>
