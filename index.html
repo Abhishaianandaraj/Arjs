@@ -1,25 +1,82 @@
 <!DOCTYPE html>
 <html>
+<head>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <!-- we import arjs version without NFT but with marker + location based support -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <body style="margin : 0px; overflow: hidden;">
-    <a-scene embedded arjs>
-      <a-marker preset="hiro">
-        <!-- we use cors proxy to avoid cross-origin problems -->
-        <!--
-          ⚠️⚠️⚠️
-          https://arjs-cors-proxy.herokuapp.com/ is now offline, Heroku has dismissed all his free plans from November 2022.
-          You need to host your own proxy and use it instead. The proxy is based on CORS Anywhere (see https://github.com/Rob--W/cors-anywhere).
-          ⚠️⚠️⚠️
-        -->
-        <a-entity
-          position="0 0 0"
-          scale="0.05 0.05 0.05"
-          gltf-model="models/scene.gltf"
-        ></a-entity>
-      </a-marker>
-      <a-entity camera></a-entity>
-    </a-scene>
-  </body>
+  <style>
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      background: rgba(0, 0, 0, 0.5); /* Transparent background */
+      z-index: 9999; /* Ensure it's above the AR scene */
+    }
+
+    #placeButton {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 120px;
+      height: 50px;
+      background-color: #4CC3D9;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      outline: none;
+      display: none; /* Initially hidden */
+    }
+  </style>
+</head>
+<body style="margin: 0px; overflow: hidden;">
+  <a-scene embedded arjs>
+    <a-marker preset="hiro">
+      <a-entity
+        id="gltfModel"
+        position="0 0 0"
+        scale="0.05 0.05 0.05"
+        gltf-model="https://arjs-cors-proxy.herokuapp.com/https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"
+        visible="false" <!-- Initially hidden -->
+      ></a-entity>
+    </a-marker>
+    <a-entity camera></a-entity>
+
+    <!-- Overlay for click event -->
+    <div id="overlay"></div>
+
+    <!-- Place button -->
+    <button id="placeButton">Place Model</button>
+  </a-scene>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const marker = document.querySelector('a-marker');
+      const overlay = document.querySelector('#overlay');
+      const placeButton = document.querySelector('#placeButton');
+      const gltfModel = document.querySelector('#gltfModel');
+
+      // Event listener for marker found
+      marker.addEventListener('markerFound', () => {
+        overlay.style.display = 'block'; // Show overlay when marker is found
+        placeButton.style.display = 'block'; // Show place button when marker is found
+      });
+
+      // Event listener for marker lost
+      marker.addEventListener('markerLost', () => {
+        overlay.style.display = 'none'; // Hide overlay when marker is lost
+        placeButton.style.display = 'none'; // Hide place button when marker is lost
+        gltfModel.setAttribute('visible', 'false'); // Hide GLTF model when marker is lost
+      });
+
+      // Event listener for click on place button
+      placeButton.addEventListener('click', () => {
+        gltfModel.setAttribute('visible', 'true'); // Show GLTF model when button is clicked
+      });
+    });
+  </script>
+</body>
 </html>
