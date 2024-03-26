@@ -18,19 +18,17 @@
 </head>
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
-    <a-marker preset="hiro"> 
-      <a-entity
+    <a-marker preset="hiro"></a-marker>
+    <a-entity id="camera" camera></a-entity>
+
+    <!-- Place the GLTF model outside the marker -->
+    <a-entity
       id="gltfModel"
       scale="0.05 0.05 0.05"
       gltf-model="models/scene.gltf"
       visible="true"
       position="0 0 0" <!-- Adjust the position here -->
     ></a-entity>
-    </a-marker>
-    <a-entity id="camera" camera></a-entity>
-
-    <!-- Place the GLTF model outside the marker -->
-   
 
     <div id="overlay"></div>
   </a-scene>
@@ -42,24 +40,27 @@
       const gltfModel = document.querySelector('#gltfModel');
       const camera = document.querySelector('#camera');
 
+      // Function to log positions
+      function logPositions() {
+        const modelPosition = gltfModel.object3D.position;
+        const cameraPosition = camera.object3D.getWorldPosition(new THREE.Vector3());
+        const relativePosition = modelPosition.clone().sub(cameraPosition);
+        console.log('Model position relative to camera:', relativePosition);
+        console.log('Camera position:', cameraPosition);
+      }
+
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
         gltfModel.setAttribute('visible', 'true');
+        // Start logging positions when the marker is found
+        setInterval(logPositions, 1000); // Log every 1 second
       });
 
       marker.addEventListener('markerLost', () => {
         overlay.style.display = 'none';
         gltfModel.setAttribute('visible', 'false');
-      });
-
-      gltfModel.addEventListener('model-loaded', () => {
-        setInterval(() => {
-          const modelPosition = gltfModel.object3D.position;
-          const cameraPosition = camera.object3D.getWorldPosition(new THREE.Vector3());
-          const relativePosition = modelPosition.clone().sub(cameraPosition);
-          console.log('Model position relative to camera:', relativePosition);
-          console.log('camera:', cameraPosition);
-        }, 1000); // Update every 1 second
+        // Stop logging positions when the marker is lost
+        clearInterval(logPositions);
       });
     });
   </script>
