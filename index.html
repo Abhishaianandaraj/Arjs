@@ -1,81 +1,25 @@
 <!DOCTYPE html>
 <html>
-<head>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <!-- we import arjs version without NFT but with marker + location based support -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <style>
-    #overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-      background: rgba(0, 0, 0, 0);
-      z-index: 9999;
-    }
-    #startButton {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100px; /* Adjust button width */
-      height: 50px; /* Adjust button height */
-      background-color: #4CC3D9;
-      color: #000;
-      text-align: center;
-      line-height: 50px;
-      cursor: pointer;
-      border-radius: 5px;
-      border: none;
-      visibility: hidden; /* Initially hidden */
-    }
-  </style>
-</head>
-<body style="margin: 0px; overflow: hidden;">
-  <a-scene embedded arjs>
-    <a-marker preset="hiro">
-      <!-- Position the button relative to the marker -->
-      <a-entity id="startButton" text="value: Start"></a-entity>
-    </a-marker>
-    <a-entity camera></a-entity>
-
-    <div id="overlay"></div>
-  </a-scene>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      let markerDetected = false;
-
-      const marker = document.querySelector('a-marker');
-      const startButton = document.querySelector('#startButton');
-      const overlay = document.querySelector('#overlay');
-
-      function startTracking() {
-        markerDetected = true;
-        overlay.style.display = 'none';
-        startButton.style.visibility = 'visible'; // Show the button
-      }
-
-      function handleClick() {
-        // Handle button click event
-        console.log('Button clicked!');
-        // Add your functionality here
-      }
-
-      marker.addEventListener('markerFound', () => {
-        overlay.style.display = 'block';
-      });
-
-      marker.addEventListener('markerLost', () => {
-        markerDetected = false;
-        overlay.style.display = 'none';
-        startButton.style.visibility = 'hidden'; // Hide the button
-      });
-
-      overlay.addEventListener('click', startTracking);
-      startButton.addEventListener('click', handleClick);
-    });
-  </script>
-</body>
+  <body style="margin : 0px; overflow: hidden;">
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <!-- we use cors proxy to avoid cross-origin problems -->
+        <!--
+          ⚠️⚠️⚠️
+          https://arjs-cors-proxy.herokuapp.com/ is now offline, Heroku has dismissed all his free plans from November 2022.
+          You need to host your own proxy and use it instead. The proxy is based on CORS Anywhere (see https://github.com/Rob--W/cors-anywhere).
+          ⚠️⚠️⚠️
+        -->
+        <a-entity
+          position="0 0 0"
+          scale="0.05 0.05 0.05"
+          gltf-model="models/scene.gltf"
+        ></a-entity>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+  </body>
 </html>
