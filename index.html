@@ -19,7 +19,7 @@
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
     <a-marker preset="hiro"></a-marker>
-    <a-entity camera></a-entity>
+    <a-entity id="camera" camera></a-entity>
 
     <!-- Place the GLTF model outside the marker -->
     <a-entity
@@ -38,6 +38,7 @@
       const marker = document.querySelector('a-marker');
       const overlay = document.querySelector('#overlay');
       const gltfModel = document.querySelector('#gltfModel');
+      const camera = document.querySelector('#camera');
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
@@ -50,12 +51,11 @@
       });
 
       gltfModel.addEventListener('model-loaded', () => {
-        console.log('Model placed at position:', gltfModel.object3D.position);
-        console.log('Marker placed at position:', marker.object3D.position);
-
         setInterval(() => {
-          console.log('Model position updated:', gltfModel.object3D.position);
-          console.log('Marker position updated:', marker.object3D.position);
+          const modelPosition = gltfModel.object3D.position;
+          const cameraPosition = camera.object3D.getWorldPosition(new THREE.Vector3());
+          const relativePosition = modelPosition.clone().sub(cameraPosition);
+          console.log('Model position relative to camera:', relativePosition);
         }, 1000); // Update every 1 second
       });
     });
