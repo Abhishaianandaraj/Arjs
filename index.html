@@ -40,33 +40,36 @@
       const gltfModel = document.querySelector('#gltfModel');
       const camera = document.querySelector('[camera]');
 
-      marker.addEventListener('markerFound', () => {
-        overlay.style.display = 'block';
-        gltfModel.setAttribute('visible', 'true');
-      });
-
-      marker.addEventListener('markerLost', () => {
-        overlay.style.display = 'none';
-        gltfModel.setAttribute('visible', 'false');
-      });
-
-      gltfModel.addEventListener('loaded', () => {
-        console.log('Model loaded');
-        gltfModel.addEventListener('model-loaded', () => {
-          console.log('Model placed at position:', gltfModel.object3D.position);
+      if (marker && overlay && gltfModel && camera) {
+        marker.addEventListener('markerFound', () => {
+          overlay.style.display = 'block';
+          gltfModel.setAttribute('visible', 'true');
         });
-      });
 
-      camera.addEventListener('loaded', () => {
-        console.log('Camera loaded');
-        camera.addEventListener('componentchanged', (event) => {
-          if (event.detail.name === 'position') {
-            console.log('Camera position:', camera.object3D.position);
-          }
+        marker.addEventListener('markerLost', () => {
+          overlay.style.display = 'none';
+          gltfModel.setAttribute('visible', 'false');
         });
-      });
+
+        gltfModel.addEventListener('loaded', () => {
+          console.log('Model loaded');
+          gltfModel.addEventListener('model-loaded', () => {
+            console.log('Model placed at position:', gltfModel.object3D.position);
+          });
+        });
+
+        camera.addEventListener('loaded', () => {
+          console.log('Camera loaded');
+          camera.addEventListener('componentchanged', (event) => {
+            if (event.detail.name === 'position') {
+              console.log('Camera position:', camera.object3D.position);
+            }
+          });
+        });
+      } else {
+        console.error('One or more elements not found.');
+      }
     });
   </script>
 </body>
 </html>
-
