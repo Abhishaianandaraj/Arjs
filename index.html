@@ -58,6 +58,7 @@
           const cameraPosition = camera.object3D.getWorldPosition(new THREE.Vector3());
           const relativePosition = modelPosition.clone().sub(cameraPosition);
           console.log('Model position relative to camera:', relativePosition);
+          console.log('camera:', cameraPosition);
         }, 1000); // Update every 1 second
       });
     });
