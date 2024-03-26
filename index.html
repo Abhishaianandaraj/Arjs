@@ -36,14 +36,15 @@
   </a-scene>
 
   <script>
-    let markerLocked = false; // Flag to indicate if marker is locked
+    document.addEventListener('DOMContentLoaded', function () {
+      let markerLocked = false; // Flag to indicate if marker is locked
 
-    // Wait for AR.js to be fully initialized
-    document.querySelector('a-scene').addEventListener('loaded', () => {
       const marker = document.querySelector('a-marker');
       const startButton = document.querySelector('#startButton');
       const camera = document.querySelector('[camera]');
       const overlay = document.querySelector('#overlay');
+      const cameraOrientationText = document.querySelector('#cameraOrientationText');
+      const directionText = document.querySelector('#directionText');
 
       // Function to start tracking
       function startTracking() {
@@ -66,7 +67,6 @@
           z: THREE.MathUtils.radToDeg(rotation.z)
         };
 
-        const cameraOrientationText = document.querySelector('#cameraOrientationText');
         cameraOrientationText.setAttribute('value', `Camera Orientation:\nX: ${rotationDeg.x.toFixed(2)}°\nY: ${rotationDeg.y.toFixed(2)}°\nZ: ${rotationDeg.z.toFixed(2)}°`);
 
         let direction;
@@ -78,7 +78,6 @@
           direction = 'Front';
         }
 
-        const directionText = document.querySelector('#directionText');
         directionText.setAttribute('value', `Direction: ${direction}`);
       }
 
@@ -107,8 +106,6 @@
 
       // Event listener for click on start button
       startButton.addEventListener('click', () => {
-        // Save camera orientation to a text file
-        const cameraOrientationText = document.querySelector('#cameraOrientationText');
         const cameraOrientation = cameraOrientationText.getAttribute('value');
         const blob = new Blob([cameraOrientation], { type: 'text/plain' });
         const anchor = document.createElement('a');
