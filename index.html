@@ -21,21 +21,13 @@
     <a-marker preset="hiro"></a-marker>
     <a-entity camera></a-entity>
 
-    <!-- Button to place the model -->
-    <a-entity
-      id="startButton"
-      geometry="primitive: plane; width: 1; height: 0.5"
-      material="color: #4CC3D9; transparent: false"
-      position="0 0.5 -3"
-      text="value: Start; color: #000; align: center"
-    ></a-entity>
-
-    <!-- GLTF model to be placed -->
+    <!-- Place the GLTF model outside the marker -->
     <a-entity
       id="gltfModel"
       scale="0.05 0.05 0.05"
       gltf-model="models/scene.gltf"
       visible="false"
+      position="0 0 -3" <!-- Adjust the position here -->
     ></a-entity>
 
     <div id="overlay"></div>
@@ -44,36 +36,29 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const marker = document.querySelector('a-marker');
-      const startButton = document.querySelector('#startButton');
       const overlay = document.querySelector('#overlay');
       const gltfModel = document.querySelector('#gltfModel');
-      let markerPosition;
-
-      function startTracking() {
-        overlay.style.display = 'none';
-        startButton.setAttribute('visible', 'false');
-      }
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
-        startButton.setAttribute('visible', 'true');
-        // Store the position of the marker when found
-        markerPosition = marker.object3D.position.clone();
+        gltfModel.setAttribute('visible', 'true');
       });
 
       marker.addEventListener('markerLost', () => {
         overlay.style.display = 'none';
-        // markerPosition is not cleared here so that the model stays in the last known position
-        startButton.setAttribute('visible', 'false');
+        gltfModel.setAttribute('visible', 'false');
       });
 
-      startButton.addEventListener('click', () => {
-        if (markerPosition) {
-          // Set the position of the GLTF model to the recorded position
-          gltfModel.object3D.position.copy(markerPosition);
-          gltfModel.setAttribute('visible', 'true');
-        } else {
-          alert('Please click the button only after placing the marker.');
-        }
-        console.log("faulty code");
-      }
+      gltfModel.addEventListener('model-loaded', () => {
+        console.log('Model placed at position:', gltfModel.object3D.position);
+        console.log('Marker placed at position:', marker.object3D.position);
+
+        setInterval(() => {
+          console.log('Model position updated:', gltfModel.object3D.position);
+          console.log('Marker position updated:', marker.object3D.position);
+        }, 1000); // Update every 1 second
+      });
+    });
+  </script>
+</body>
+</html>
