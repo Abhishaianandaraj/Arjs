@@ -19,15 +19,22 @@
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
     <a-marker preset="hiro"></a-marker>
-    <a-entity id="camera" camera></a-entity>
+    <a-entity camera></a-entity>
 
-    <!-- Place the GLTF model outside the marker -->
+    <a-entity
+      id="startButton"
+      visible="false"
+      geometry="primitive: plane; width: 1; height: 0.5"
+      material="color: #4CC3D9; transparent: false"
+      position="0 0.5 -3"
+      text="value: Start; color: #000; align: center"
+    ></a-entity>
+
     <a-entity
       id="gltfModel"
       scale="0.05 0.05 0.05"
       gltf-model="models/scene.gltf"
-      visible="true"
-      position="0 0 0" <!-- Adjust the position here -->
+      visible="false"
     ></a-entity>
 
     <div id="overlay"></div>
@@ -36,33 +43,44 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       const marker = document.querySelector('a-marker');
+      const startButton = document.querySelector('#startButton');
       const overlay = document.querySelector('#overlay');
       const gltfModel = document.querySelector('#gltfModel');
-      const camera = document.querySelector('#camera');
+      let markerPosition;
 
-      // Function to log positions
-      function logPositions() {
-        const modelPosition = gltfModel.object3D.position;
-        const cameraPosition = camera.object3D.getWorldPosition(new THREE.Vector3());
-        const relativePosition = modelPosition.clone().sub(cameraPosition);
-        console.log('Model position relative to camera:', relativePosition);
-        console.log('Camera position:', cameraPosition);
+      function startTracking() {
+        overlay.style.display = 'none';
+        startButton.setAttribute('visible', 'false');
       }
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
-        gltfModel.setAttribute('visible', 'true');
-        // Start logging positions when the marker is found
-        setInterval(logPositions, 1000); // Log every 1 second
+        startButton.setAttribute('visible', 'true');
       });
 
       marker.addEventListener('markerLost', () => {
         overlay.style.display = 'none';
-        gltfModel.setAttribute('visible', 'false');
-        // Stop logging positions when the marker is lost
-        clearInterval(logPositions);
+        startButton.setAttribute('visible', 'false');
+      });
+
+      overlay.addEventListener('click', () => {
+        // Record the position of the marker
+        markerPosition = marker.object3D.position.clone();
+        startTracking();
+        console.log(`${markerPosition.x} ${markerPosition.y} ${markerPosition.z}`);
+      });
+
+      startButton.addEventListener('click', () => {
+        if (markerPosition) {
+          // Set the position of the GLTF model to the recorded position
+          gltfModel.setAttribute('position', `${markerPosition.x} ${markerPosition.y} ${markerPosition.z}`);
+          gltfModel.setAttribute('visible', 'true');
+        } else {
+          alert('Please click the button only after placing the marker.');
+        }
       });
     });
   </script>
 </body>
 </html>
+
