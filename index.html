@@ -8,7 +8,7 @@
   <a-scene embedded arjs>
     <a-entity id="camera" camera position="0 0 0"></a-entity> <!-- Place the camera at the center -->
 
-    <!-- Place the AR object -->
+    <!-- Place the AR object relative to the camera -->
     <a-entity
       id="arObject"
       scale="0.05 0.05 0.05"
@@ -25,15 +25,11 @@
       // Update the position of the AR object relative to the camera
       function updateARObjectPosition() {
         const cameraPosition = camera.object3D.getWorldPosition(new THREE.Vector3());
-        arObject.setAttribute('position', cameraPosition.x + ' ' + cameraPosition.y + ' ' + (cameraPosition.z - 3));
+        arObject.object3D.position.copy(cameraPosition); // Set AR object's position to camera's position
       }
 
-      // Call the update function in the requestAnimationFrame loop
-      function render() {
-        updateARObjectPosition();
-        requestAnimationFrame(render);
-      }
-      render();
+      // Call the update function once
+      updateARObjectPosition();
     });
   </script>
 </body>
