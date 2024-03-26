@@ -22,8 +22,7 @@
   </style>
 </head>
 <body style="margin: 0px; overflow: hidden;">
-  <a-scene embedded arjs
-            onclick="handleSceneClick(event)">
+  <a-scene embedded arjs>
     <a-marker preset="hiro">
       <a-entity
         id="gltfModel"
@@ -36,7 +35,7 @@
     <a-entity camera></a-entity>
 
     <!-- Place button -->
-    <button id="placeButton">Place Model</button>
+    <button id="placeButton" onclick="handleButtonClick()">Place Model</button>
   </a-scene>
 
   <script>
@@ -57,14 +56,9 @@
       });
     });
 
-    function handleSceneClick(event) {
-      const placeButton = document.querySelector('#placeButton');
+    function handleButtonClick() {
       const gltfModel = document.querySelector('#gltfModel');
-      
-      // Check if the click event target is the place button
-      if (event.target === placeButton) {
-        gltfModel.setAttribute('visible', 'true'); // Show GLTF model when button is clicked
-      }
+      gltfModel.setAttribute('visible', 'true'); // Show GLTF model when button is clicked
     }
   </script>
 </body>
