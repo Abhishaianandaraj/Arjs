@@ -18,17 +18,16 @@
 </head>
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
-    <a-marker preset="hiro"></a-marker>
+    <a-marker preset="hiro">
+      <!-- Place your GLTF model directly inside the marker -->
+      <a-entity
+        id="gltfModel"
+        scale="0.05 0.05 0.05"
+        gltf-model="models/scene.gltf"
+        visible="false"
+      ></a-entity>
+    </a-marker>
     <a-entity camera></a-entity>
-
-    <!-- Place the GLTF model outside the marker -->
-    <a-entity
-      id="gltfModel"
-      scale="0.05 0.05 0.05"
-      gltf-model="models/scene.gltf"
-      visible="false"
-      position="0 0 -3" <!-- Adjust the position here -->
-    ></a-entity>
 
     <div id="overlay"></div>
   </a-scene>
@@ -38,6 +37,7 @@
       const marker = document.querySelector('a-marker');
       const overlay = document.querySelector('#overlay');
       const gltfModel = document.querySelector('#gltfModel');
+      const camera = document.querySelector('[camera]');
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
@@ -54,7 +54,17 @@
         console.log('Marker placed at position:', marker.object3D.position);
 
         setInterval(() => {
-          console.log('Model position updated:', gltfModel.object3D.position);
+          // Get world position of the model
+          const modelPosition = gltfModel.object3D.getWorldPosition();
+
+          // Get world position of the camera
+          const cameraPosition = camera.object3D.getWorldPosition();
+
+          // Calculate position of the model relative to the camera
+          const modelRelativeToCamera = new THREE.Vector3();
+          modelRelativeToCamera.copy(modelPosition).sub(cameraPosition);
+
+          console.log('Model position relative to camera:', modelRelativeToCamera);
           console.log('Marker position updated:', marker.object3D.position);
         }, 1000); // Update every 1 second
       });
