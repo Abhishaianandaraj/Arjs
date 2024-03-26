@@ -34,6 +34,7 @@
       id="gltfModel"
       scale="0.05 0.05 0.05"
       gltf-model="models/scene.gltf"
+      position = "0 0 0"
       visible="false"
     ></a-entity>
 
@@ -71,13 +72,13 @@
       });
 
       startButton.addEventListener('click', () => {
-        if (markerPosition) {
+        /*if (markerPosition) {
           // Set the position of the GLTF model to the recorded position
           gltfModel.setAttribute('position', `${markerPosition.x} ${markerPosition.y} ${markerPosition.z}`);
           gltfModel.setAttribute('visible', 'true');
         } else {
           alert('Please click the button only after placing the marker.');
-        }
+        }*/
       });
     });
   </script>
