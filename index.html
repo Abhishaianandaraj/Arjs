@@ -11,44 +11,28 @@
       width: 100%;
       height: 100%;
       display: none;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0);
       z-index: 9999;
-    }
-
-    #placeButton {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 120px;
-      height: 50px;
-      background-color: #4CC3D9;
-      border: none;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      outline: none;
-      display: none;
     }
   </style>
 </head>
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
-    <a-marker preset="hiro">
-      <!-- Place your GLTF model directly inside the marker -->
-      <a-entity
-        id="gltfModel"
-        scale="0.05 0.05 0.05"
-        gltf-model="models/scene.gltf"
-        visible="false"
-      ></a-entity>
-    </a-marker>
-    <a-entity camera></a-entity>
+    <a-marker preset="hiro"></a-marker>
+    <a-entity id="camera" camera></a-entity>
+
+    <!-- Button to place the model -->
+    <button id="placeButton" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">Place Model</button>
+
+    <!-- GLTF model to be placed -->
+    <a-entity
+      id="gltfModel"
+      scale="0.05 0.05 0.05"
+      gltf-model="models/scene.gltf"
+      visible="false"
+    ></a-entity>
 
     <div id="overlay"></div>
-
-    <!-- Place button -->
-    <button id="placeButton">Place Model</button>
   </a-scene>
 
   <script>
@@ -57,6 +41,8 @@
       const overlay = document.querySelector('#overlay');
       const placeButton = document.querySelector('#placeButton');
       const gltfModel = document.querySelector('#gltfModel');
+      const camera = document.querySelector('#camera');
+      let markerPosition;
 
       marker.addEventListener('markerFound', () => {
         overlay.style.display = 'block';
@@ -69,9 +55,28 @@
       });
 
       placeButton.addEventListener('click', () => {
-        // Place the model on the marker
-        gltfModel.object3D.position.copy(marker.object3D.position);
-        gltfModel.setAttribute('visible', 'true');
+        if (markerPosition) {
+          // Set the position of the GLTF model to the recorded position
+          gltfModel.object3D.position.copy(markerPosition);
+          gltfModel.setAttribute('visible', 'true');
+        } else {
+          alert('Please click the button only after placing the marker.');
+        }
+      });
+
+      // Event listener for click on the overlay to record marker position
+      overlay.addEventListener('click', () => {
+        // Record the position of the marker
+        markerPosition = marker.object3D.position.clone();
+      });
+
+      // Update button position when camera moves
+      camera.addEventListener('componentchanged', (event) => {
+        if (event.detail.name === 'position') {
+          const cameraPosition = camera.object3D.position.clone();
+          placeButton.style.left = `${50 + (cameraPosition.x * 50)}%`;
+          placeButton.style.top = `${50 + (cameraPosition.y * 50)}%`;
+        }
       });
     });
   </script>
