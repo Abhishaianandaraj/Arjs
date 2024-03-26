@@ -25,6 +25,7 @@
         scale="0.05 0.05 0.05"
         gltf-model="models/scene.gltf"
         visible="false"
+        loaded="true"
       ></a-entity>
     </a-marker>
     <a-entity camera></a-entity>
@@ -49,26 +50,23 @@
         gltfModel.setAttribute('visible', 'false');
       });
 
-      gltfModel.addEventListener('model-loaded', () => {
-        console.log('Model placed at position:', gltfModel.object3D.position);
-        console.log('Marker placed at position:', marker.object3D.position);
+      gltfModel.addEventListener('loaded', () => {
+        console.log('Model loaded');
+        gltfModel.addEventListener('model-loaded', () => {
+          console.log('Model placed at position:', gltfModel.object3D.position);
+        });
+      });
 
-        setInterval(() => {
-          // Get world position of the model
-          const modelPosition = gltfModel.object3D.getWorldPosition();
-
-          // Get world position of the camera
-          const cameraPosition = camera.object3D.getWorldPosition();
-
-          // Calculate position of the model relative to the camera
-          const modelRelativeToCamera = new THREE.Vector3();
-          modelRelativeToCamera.copy(modelPosition).sub(cameraPosition);
-
-          console.log('Model position relative to camera:', modelRelativeToCamera);
-          console.log('Marker position updated:', marker.object3D.position);
-        }, 1000); // Update every 1 second
+      camera.addEventListener('loaded', () => {
+        console.log('Camera loaded');
+        camera.addEventListener('componentchanged', (event) => {
+          if (event.detail.name === 'position') {
+            console.log('Camera position:', camera.object3D.position);
+          }
+        });
       });
     });
   </script>
 </body>
 </html>
+
