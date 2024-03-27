@@ -18,20 +18,18 @@
 </head>
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
-    <a-marker preset="hiro">
-      <a-entity
+    
+    <a-entity camera></a-entity>
+
+    <!-- Place the GLTF model outside the marker -->
+     <a-entity
       id="gltfModel"
       scale="0.05 0.05 0.05"
       gltf-model="models/scene.gltf"
       visible="true"
-      position="0 2 0" <!-- Adjust the position here -->
+      position="-0.39040639517010867 1.2681388626506394 -7.606238103985708" <!-- Adjust the position here -->
       rotation="0 90 0"
     ></a-entity>
-    </a-marker>
-    <a-entity camera></a-entity>
-
-    <!-- Place the GLTF model outside the marker -->
-    
 
     <div id="overlay"></div>
   </a-scene>
