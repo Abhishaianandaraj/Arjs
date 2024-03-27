@@ -20,64 +20,36 @@
   <a-scene embedded arjs>
     <a-entity camera></a-entity>
 
-    <!-- Place the GLTF model outside the marker -->
-    <a-marker preset="hiro">
-      <a-entity
-        id="gltfModel"
-        scale="0.05 0.05 0.05"
-        gltf-model="models/scene.gltf"
-        visible="true"
-        position="0 0 0"
-      ></a-entity>
-    </a-marker>
+    <!-- Place the GLTF model at the center of the scene -->
+    <a-entity
+      id="gltfModel"
+      scale="0.05 0.05 0.05"
+      gltf-model="models/scene.gltf"
+      visible="true"
+      position="0 0 0"
+    ></a-entity>
 
     <div id="overlay"></div>
   </a-scene>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-      const marker = document.querySelector('a-marker');
-      const overlay = document.querySelector('#overlay');
       const gltfModel = document.querySelector('#gltfModel');
-      
-      marker.addEventListener('markerFound', () => {
-        overlay.style.display = 'block';
-        gltfModel.setAttribute('visible', 'true');
-      });
-      
-      marker.addEventListener('markerLost', () => {
-        overlay.style.display = 'none';
-        gltfModel.setAttribute('visible', 'false');
-      });
 
-      // Calculate initial position of the model relative to the camera
-      const camera = document.querySelector('a-camera');
-      const initialCameraPosition = camera.getAttribute('position');
+      // Calculate initial position of the model relative to the scene center
+      const sceneCenter = { x: 0, y: 0, z: 0 };
       const initialModelPosition = gltfModel.getAttribute('position');
       const offset = {
-        x: initialModelPosition.x - initialCameraPosition.x,
-        y: initialModelPosition.y - initialCameraPosition.y,
-        z: initialModelPosition.z - initialCameraPosition.z
+        x: sceneCenter.x - initialModelPosition.x,
+        y: sceneCenter.y - initialModelPosition.y,
+        z: sceneCenter.z - initialModelPosition.z
       };
 
-      // Update model position relative to camera position
-      function updateModelPositionRelativeToCamera() {
-        const cameraPosition = camera.getAttribute('position');
-        gltfModel.setAttribute('position', {
-          x: cameraPosition.x + offset.x,
-          y: cameraPosition.y + offset.y,
-          z: cameraPosition.z + offset.z
-        });
-      }
-
-      // Listen for camera position changes
-      camera.addEventListener('componentchanged', (event) => {
-        if (event.detail.name === 'position') {
-          updateModelPositionRelativeToCamera();
-        }
+      // Update model position to be at the center of the scene
+      gltfModel.setAttribute('position', {
+        x: sceneCenter.x + offset.x,
+        y: sceneCenter.y + offset.y,
+        z: sceneCenter.z + offset.z
       });
-
-      // Initial call to update model position
-      updateModelPositionRelativeToCamera();
     });
   </script>
 </body>
