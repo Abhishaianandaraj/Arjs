@@ -51,6 +51,9 @@
         z: sceneCenter.z + offset.z
       });
     });
+     setInterval(() => {
+          console.log('Model position updated:', gltfModel.object3D.position);
+        }, 1000);
   </script>
 </body>
 </html>
