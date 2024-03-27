@@ -50,10 +50,12 @@
         y: sceneCenter.y + offset.y,
         z: sceneCenter.z + offset.z
       });
+
+      // Set interval to log the model position
+      setInterval(() => {
+        console.log('Model position updated:', initialModelPosition.x);
+      }, 1000);
     });
-     setInterval(() => {
-          console.log('Model position updated:', initialModelPosition.x);
-        }, 1000);
   </script>
 </body>
 </html>
