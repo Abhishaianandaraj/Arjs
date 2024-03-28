@@ -6,55 +6,39 @@
 <body>
   <a-scene>
     <!-- Camera -->
-    <a-entity camera></a-entity>
+    <a-entity id="camera" camera position="0 0 0"></a-entity>
 
     <!-- Place the model at a specific position relative to the camera -->
-    <a-entity id="model" gltf-model="url(models/scene.gltf)"></a-entity>
+    <a-entity id="model" gltf-model="url(models/scene.gltf)" position="0 0 -3"></a-entity>
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        // Function to set and update model position relative to camera
+        // Function to update model position relative to camera
         function updateModelPositionRelativeToCamera() {
+          const camera = document.querySelector('#camera');
+          const model = document.querySelector('#model');
           const cameraPosition = camera.getAttribute('position');
+          const positionOffset = { x: 0, y: 0, z: -3 }; // Adjust as needed
+
           model.setAttribute('position', {
             x: cameraPosition.x + positionOffset.x,
             y: cameraPosition.y + positionOffset.y,
             z: cameraPosition.z + positionOffset.z
           });
+
           // Log camera position every 1 second
-          setInterval(() => {
-            console.log("Camera position:", cameraPosition);
-          }, 1000);
+          console.log("Camera position:", cameraPosition);
         }
 
-        // Wait for the camera entity to be loaded
-        const cameraLoadedHandler = () => {
-          const camera = document.querySelector('a-camera');
-          const model = document.querySelector('#model');
-          const positionOffset = { x: 0, y: 0, z: -3 }; // Adjust as needed
+        // Call the update function initially
+        updateModelPositionRelativeToCamera();
 
-          // Check if the camera element exists
-          if (camera) {
-            // Set initial model position
+        // Listen for camera position changes
+        document.querySelector('#camera').addEventListener('componentchanged', (event) => {
+          if (event.detail.name === 'position') {
             updateModelPositionRelativeToCamera();
-
-            // Listen for camera position changes
-            camera.addEventListener('componentchanged', (event) => {
-              if (event.detail.name === 'position') {
-                updateModelPositionRelativeToCamera();
-              }
-            });
-
-            // Remove the camera loaded event listener once it's done
-            camera.removeEventListener('loaded', cameraLoadedHandler);
           }
-        };
-
-        // Listen for the loaded event on the camera entity
-        const camera = document.querySelector('a-camera');
-        if (camera) {
-          camera.addEventListener('loaded', cameraLoadedHandler);
-        }
+        });
       });
     </script>
   </a-scene>
