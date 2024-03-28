@@ -5,35 +5,64 @@
 </head>
 <body>
   <a-scene>
+    <!-- Button to open the camera -->
+    <button onclick="openCamera()">Open Camera</button>
+
     <!-- Camera -->
-    <a-entity id="camera" camera position="0 0 0"></a-entity>
+    <a-entity id="camera" camera></a-entity>
 
     <!-- Place the model at a specific position relative to the camera -->
-    <a-entity id="model" gltf-model="url(models/scene.gltf)" visible="false"></a-entity>
-
-    <!-- Button to place the model -->
-    <a-plane id="placeButton" color="blue" width="2" height="1" position="0 0 -5" rotation="0 0 0"></a-plane>
+    <a-entity id="model" gltf-model="url(models/scene.gltf)"></a-entity>
 
     <script>
+      function openCamera() {
+        const camera = document.querySelector('#camera');
+        camera.setAttribute('camera', 'active', true);
+      }
+
       document.addEventListener('DOMContentLoaded', function () {
-        // Function to place the model at the camera position
-        function placeModel() {
-          const camera = document.querySelector('#camera');
-          const model = document.querySelector('#model');
+        // Function to set and update model position relative to camera
+        function updateModelPositionRelativeToCamera() {
           const cameraPosition = camera.getAttribute('position');
-          
-          // Set the model's position to the camera's position
-          model.setAttribute('position', cameraPosition);
-          
-          // Make the model visible
-          model.setAttribute('visible', 'true');
-          
-          // Log model position
-          console.log("Model placed at position:", cameraPosition);
+          model.setAttribute('position', {
+            x: cameraPosition.x + positionOffset.x,
+            y: cameraPosition.y + positionOffset.y,
+            z: cameraPosition.z + positionOffset.z
+          });
+          // Log camera position every 1 second
+          setInterval(() => {
+            console.log("Camera position:", cameraPosition);
+          }, 1000);
         }
 
-        // Listen for click events on the placeButton
-        document.querySelector('#placeButton').addEventListener('click', placeModel);
+        // Wait for the camera entity to be loaded
+        const cameraLoadedHandler = () => {
+          const camera = document.querySelector('#camera');
+          const model = document.querySelector('#model');
+          const positionOffset = { x: 0, y: 0, z: -3 }; // Adjust as needed
+
+          // Check if the camera element exists
+          if (camera) {
+            // Set initial model position
+            updateModelPositionRelativeToCamera();
+
+            // Listen for camera position changes
+            camera.addEventListener('componentchanged', (event) => {
+              if (event.detail.name === 'position') {
+                updateModelPositionRelativeToCamera();
+              }
+            });
+
+            // Remove the camera loaded event listener once it's done
+            camera.removeEventListener('loaded', cameraLoadedHandler);
+          }
+        };
+
+        // Listen for the loaded event on the camera entity
+        const camera = document.querySelector('#camera');
+        if (camera) {
+          camera.addEventListener('loaded', cameraLoadedHandler);
+        }
       });
     </script>
   </a-scene>
