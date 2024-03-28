@@ -2,69 +2,20 @@
 <html>
 <head>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 </head>
-<body>
-  <a-scene>
-    <!-- Button to open the camera -->
-    <button onclick="openCamera()">Open Camera</button>
-
-    <!-- Camera -->
-    <a-entity id="camera" camera></a-entity>
-
-    <!-- Place the model at a specific position relative to the camera -->
-    <a-entity id="model" gltf-model="url(models/scene.gltf)"></a-entity>
-
-    <script>
-      function openCamera() {
-        const camera = document.querySelector('#camera');
-        camera.setAttribute('camera', 'active', true);
-      }
-
-      document.addEventListener('DOMContentLoaded', function () {
-        // Function to set and update model position relative to camera
-        function updateModelPositionRelativeToCamera() {
-          const cameraPosition = camera.getAttribute('position');
-          model.setAttribute('position', {
-            x: cameraPosition.x + positionOffset.x,
-            y: cameraPosition.y + positionOffset.y,
-            z: cameraPosition.z + positionOffset.z
-          });
-          // Log camera position every 1 second
-          setInterval(() => {
-            console.log("Camera position:", cameraPosition);
-          }, 1000);
-        }
-
-        // Wait for the camera entity to be loaded
-        const cameraLoadedHandler = () => {
-          const camera = document.querySelector('#camera');
-          const model = document.querySelector('#model');
-          const positionOffset = { x: 0, y: 0, z: -3 }; // Adjust as needed
-
-          // Check if the camera element exists
-          if (camera) {
-            // Set initial model position
-            updateModelPositionRelativeToCamera();
-
-            // Listen for camera position changes
-            camera.addEventListener('componentchanged', (event) => {
-              if (event.detail.name === 'position') {
-                updateModelPositionRelativeToCamera();
-              }
-            });
-
-            // Remove the camera loaded event listener once it's done
-            camera.removeEventListener('loaded', cameraLoadedHandler);
-          }
-        };
-
-        // Listen for the loaded event on the camera entity
-        const camera = document.querySelector('#camera');
-        if (camera) {
-          camera.addEventListener('loaded', cameraLoadedHandler);
-        }
-      });
-    </script>
+<body style="margin: 0px; overflow: hidden;">
+  <a-scene embedded arjs>
+    <!-- Place the model on a marker -->
+    <a-marker preset="hiro">
+      <a-entity
+        id="gltfModel"
+        scale="0.05 0.05 0.05"
+        gltf-model="models/scene.gltf"
+        visible="true"
+        position="0 0 0" <!-- Adjust the position here -->
+      ></a-entity>
+    </a-marker>
   </a-scene>
 </body>
 </html>
