@@ -9,36 +9,31 @@
     <a-entity id="camera" camera position="0 0 0"></a-entity>
 
     <!-- Place the model at a specific position relative to the camera -->
-    <a-entity id="model" gltf-model="url(models/scene.gltf)" position="0 0 -3"></a-entity>
+    <a-entity id="model" gltf-model="url(models/scene.gltf)" visible="false"></a-entity>
+
+    <!-- Button to place the model -->
+    <a-plane id="placeButton" color="blue" width="2" height="1" position="0 0 -5" rotation="0 0 0"></a-plane>
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        // Function to update model position relative to camera
-        function updateModelPositionRelativeToCamera() {
+        // Function to place the model at the camera position
+        function placeModel() {
           const camera = document.querySelector('#camera');
           const model = document.querySelector('#model');
           const cameraPosition = camera.getAttribute('position');
-          const positionOffset = { x: 0, y: 0, z: -3 }; // Adjust as needed
-
-          model.setAttribute('position', {
-            x: cameraPosition.x + positionOffset.x,
-            y: cameraPosition.y + positionOffset.y,
-            z: cameraPosition.z + positionOffset.z
-          });
-
-          // Log camera position every 1 second
-          console.log("Camera position:", cameraPosition);
+          
+          // Set the model's position to the camera's position
+          model.setAttribute('position', cameraPosition);
+          
+          // Make the model visible
+          model.setAttribute('visible', 'true');
+          
+          // Log model position
+          console.log("Model placed at position:", cameraPosition);
         }
 
-        // Call the update function initially
-        updateModelPositionRelativeToCamera();
-
-        // Listen for camera position changes
-        document.querySelector('#camera').addEventListener('componentchanged', (event) => {
-          if (event.detail.name === 'position') {
-            updateModelPositionRelativeToCamera();
-          }
-        });
+        // Listen for click events on the placeButton
+        document.querySelector('#placeButton').addEventListener('click', placeModel);
       });
     </script>
   </a-scene>
