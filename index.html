@@ -8,27 +8,18 @@
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs="sourceType: webcam;">
     <!-- Use A-Frame's camera component to open the camera -->
-    <a-entity id="camera" camera rotation-reader></a-entity>
-
-    <!-- Place objects in the scene -->
-    <a-box position="0 0 -3" color="red"></a-box>
-    <a-sphere position="1 0 -3" radius="0.5" color="green"></a-sphere>
-    <a-cylinder position="-1 0 -3" height="1" radius="0.5" color="blue"></a-cylinder>
+    <a-entity id="camera" camera></a-entity>
   </a-scene>
 
   <script>
-    AFRAME.registerComponent('rotation-reader', {
-      tick: (function () {
+    document.querySelector('#camera').addEventListener('loaded', function() {
+      console.log('Camera opened');
+      setInterval(function() {
+        var camera = document.querySelector('#camera').object3D;
         var position = new THREE.Vector3();
-        var quaternion = new THREE.Quaternion();
-
-        return function () {
-          this.el.object3D.getWorldPosition(position);
-          this.el.object3D.getWorldQuaternion(quaternion);
-          console.log('Camera Position:', position);
-          console.log('Camera Rotation:', quaternion);
-        };
-      })()
+        camera.getWorldPosition(position);
+        console.log('Camera Position:', position);
+      }, 1000); // Log position every second
     });
   </script>
 </body>
