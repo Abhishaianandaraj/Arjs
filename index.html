@@ -1,81 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <title>Camera Position</title>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <style>
-    #overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: none;
-      background: rgba(0, 0, 0, 0.5); /* Transparent background */
-      z-index: 9999; /* Ensure it's above the AR scene */
-    }
-
-    #placeButton {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 120px;
-      height: 50px;
-      background-color: #4CC3D9;
-      border: none;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      outline: none;
-      display: none; /* Initially hidden */
-    }
-  </style>
 </head>
 <body style="margin: 0px; overflow: hidden;">
-  <a-scene embedded arjs>
-    <a-marker preset="hiro">
-      <a-entity
-        id="gltfModel"
-        position="0 0 0"
-        scale="0.05 0.05 0.05"
-        gltf-model="models/scene.gltf"
-        visible="false" // Initially hidden
-      ></a-entity>
-    </a-marker>
-    <a-entity camera></a-entity>
+  <a-scene embedded arjs="sourceType: webcam;">
+    <!-- Use A-Frame's camera component to open the camera -->
+    <a-entity id="camera" camera rotation-reader></a-entity>
 
-    <!-- Overlay for click event -->
-    <div id="overlay"></div>
-
-    <!-- Place button -->
-    <button id="placeButton">Place Model</button>
+    <!-- Place objects in the scene -->
+    <a-box position="0 0 -3" color="red"></a-box>
+    <a-sphere position="1 0 -3" radius="0.5" color="green"></a-sphere>
+    <a-cylinder position="-1 0 -3" height="1" radius="0.5" color="blue"></a-cylinder>
   </a-scene>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const marker = document.querySelector('a-marker');
-      const overlay = document.querySelector('#overlay');
-      const placeButton = document.querySelector('#placeButton');
-      const gltfModel = document.querySelector('#gltfModel');
+    AFRAME.registerComponent('rotation-reader', {
+      tick: (function () {
+        var position = new THREE.Vector3();
+        var quaternion = new THREE.Quaternion();
 
-      // Event listener for marker found
-      marker.addEventListener('markerFound', () => {
-        overlay.style.display = 'block'; // Show overlay when marker is found
-        placeButton.style.display = 'block'; // Show place button when marker is found
-      });
-
-      // Event listener for marker lost
-      marker.addEventListener('markerLost', () => {
-        overlay.style.display = 'none'; // Hide overlay when marker is lost
-        placeButton.style.display = 'none'; // Hide place button when marker is lost
-        gltfModel.setAttribute('visible', 'false'); // Hide GLTF model when marker is lost
-      });
-
-      // Event listener for click on place button
-      placeButton.addEventListener('click', () => {
-        gltfModel.setAttribute('visible', 'true'); // Show GLTF model when button is clicked
-      });
+        return function () {
+          this.el.object3D.getWorldPosition(position);
+          this.el.object3D.getWorldQuaternion(quaternion);
+          console.log('Camera Position:', position);
+          console.log('Camera Rotation:', quaternion);
+        };
+      })()
     });
   </script>
 </body>
