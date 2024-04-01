@@ -13,14 +13,21 @@
   </a-scene>
 
   <script>
-    document.querySelector('#camera').addEventListener('loaded', function() {
-      console.log('Camera opened');
-      setInterval(function() {
-        var camera = document.querySelector('#camera').object3D;
-        var position = new THREE.Vector3();
-        camera.getWorldPosition(position);
-        console.log('Camera Position:', position);
-      }, 1000); // Log position every second
+    document.querySelector('a-scene').addEventListener('loaded', function () {
+      console.log('Scene loaded');
+      var camera = document.querySelector('#camera');
+      if (camera) {
+        camera.addEventListener('loaded', function () {
+          console.log('Camera opened');
+          setInterval(function () {
+            var position = new THREE.Vector3();
+            camera.object3D.getWorldPosition(position);
+            console.log('Camera Position:', position);
+          }, 1000); // Log position every second
+        });
+      } else {
+        console.error('Camera not found');
+      }
     });
   </script>
 </body>
