@@ -54,8 +54,11 @@
 
             window.addEventListener('resize', onWindowResize, false);
 
-            // Call updateCameraPosition every second
-            setInterval(updateCameraPosition, 1000);
+            // Wait for the XR session to be established
+            renderer.xr.addEventListener('sessionstart', () => {
+                // Call updateCameraPosition every second
+                setInterval(updateCameraPosition, 1000);
+            });
         }
 
         function onWindowResize() {
@@ -77,7 +80,7 @@
         function updateCameraPosition() {
             const cameraPosition = camera.position;
             const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
-            
+
             // Check if in XR session
             if (renderer.xr.isPresenting) {
                 // Create a new div element
@@ -87,7 +90,7 @@
                 overlayDiv.style.top = '10px';
                 overlayDiv.style.left = '10px';
                 overlayDiv.style.color = 'white';
-                
+
                 // Append the div to the XR session's DOM overlay
                 renderer.xr.getSession().then(session => {
                     session.domOverlayState.element.appendChild(overlayDiv);
