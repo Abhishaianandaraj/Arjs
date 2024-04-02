@@ -1,36 +1,182 @@
-<!DOCTYPE html>
+<!doctype html>
+<!--
+Copyright 2018 The Immersive Web Community Group
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
 <html>
 <head>
-    <title>WebXR Camera Pose</title>
-    <script src="https://cdn.jsdelivr.net/npm/@immersive-web/webxr-polyfill@latest/dist/webxr-polyfill.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@immersive-web/webxr@latest/dist/webxr.js"></script>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
+    <meta name='mobile-web-app-capable' content='yes'>
+    <meta name='apple-mobile-web-app-capable' content='yes'>
+    <link rel='icon' type='image/png' sizes='32x32' href='favicon-32x32.png'>
+    <link rel='icon' type='image/png' sizes='96x96' href='favicon-96x96.png'>
+    <link rel='stylesheet' href='css/common.css'>
+
+    <title>Immersive AR Session</title>
 </head>
 <body>
-    <button onclick="startXR()">Start WebXR</button>
-    <div id="output"></div>
+    <header>
+        <details open>
+            <summary>Immersive AR Session</summary>
+            <p>
+                This sample demonstrates how to use an 'immersive-ar' XRSession to
+                present a simple WebGL scene to a transparent or passthrough XR
+                device. The logic is largely the same as the corresponding VR sample,
+                with the primary difference being that no background is rendered and
+                the model is scaled down for easier viewing in a real-world space.
+                <a class="back" href="./">Back</a>
+            </p>
+        </details>
+    </header>
+    <div id="cameraOrientation"></div>
+    <script type="module">
+        import {WebXRButton} from './js/util/webxr-button.js';
+        import {Scene} from './js/render/scenes/scene.js';
+        import {Renderer, createWebGLContext} from './js/render/core/renderer.js';
+        import {SkyboxNode} from './js/render/nodes/skybox.js';
+        import {InlineViewerHelper} from './js/util/inline-viewer-helper.js';
+        import {Gltf2Node} from './js/render/nodes/gltf2.js';
+        import {QueryArgs} from './js/util/query-args.js';
 
-    <script>
-        async function startXR() {
-            const session = await navigator.xr.requestSession('immersive-ar', {
-                requiredFeatures: ['viewer'],
+        // If requested, use the polyfill to provide support for mobile devices
+        // and devices which only support WebVR.
+        import WebXRPolyfill from './js/third-party/webxr-polyfill/build/webxr-polyfill.module.js';
+        if (QueryArgs.getBool('usePolyfill', true)) {
+            let polyfill = new WebXRPolyfill();
+        }
+
+        // XR globals.
+        let xrButton = null;
+        let xrImmersiveRefSpace = null;
+        let inlineViewerHelper = null;
+
+        // WebGL scene globals.
+        let gl = null;
+        let renderer = null;
+        let scene = new Scene();
+        let solarSystem = new Gltf2Node({url: 'media/gltf/space/space.gltf'});
+        solarSystem.scale = [0.1, 0.1, 0.1];
+        scene.addNode(solarSystem);
+        let skybox = new SkyboxNode({url: 'media/textures/milky-way-4k.png'});
+        scene.addNode(skybox);
+
+        function initXR() {
+            xrButton = new WebXRButton({
+                onRequestSession: onRequestSession,
+                onEndSession: onEndSession,
+                textEnterXRTitle: "START AR",
+                textXRNotFoundTitle: "AR NOT FOUND",
+                textExitXRTitle: "EXIT  AR",
             });
+            document.querySelector('header').appendChild(xrButton.domElement);
 
-            const viewerSpace = await session.requestReferenceSpace('viewer');
+            if (navigator.xr) {
+                navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+                    xrButton.enabled = supported;
+                });
 
-            session.requestAnimationFrame((time, frame) => {
-                const viewerPose = frame.getViewerPose(viewerSpace);
+                navigator.xr.requestSession('inline').then(onSessionStarted);
+            }
+        }
 
-                if (viewerPose) {
-                    const position = viewerPose.transform.position;
-                    const orientation = viewerPose.transform.orientation;
+        function onRequestSession() {
+            return navigator.xr.requestSession('immersive-ar')
+                .then((session) => {
+                    xrButton.setSession(session);
+                    session.isImmersive = true;
+                    onSessionStarted(session);
+                });
+        }
 
-                    document.getElementById('output').innerText = `Camera Position: ${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)}\n
-                    Camera Orientation: ${orientation.x.toFixed(2)}, ${orientation.y.toFixed(2)}, ${orientation.z.toFixed(2)}, ${orientation.w.toFixed(2)}`;
+        function initGL() {
+            if (gl)
+                return;
+
+            gl = createWebGLContext({
+                xrCompatible: true
+            });
+            document.body.appendChild(gl.canvas);
+
+            function onResize() {
+                gl.canvas.width = gl.canvas.clientWidth * window.devicePixelRatio;
+                gl.canvas.height = gl.canvas.clientHeight * window.devicePixelRatio;
+            }
+            window.addEventListener('resize', onResize);
+            onResize();
+
+            renderer = new Renderer(gl);
+
+            scene.setRenderer(renderer);
+        }
+
+        function onSessionStarted(session) {
+            session.addEventListener('end', onSessionEnded);
+
+            if (session.isImmersive) {
+                skybox.visible = false;
+            }
+
+            initGL();
+
+            session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+
+            let refSpaceType = session.isImmersive ? 'local' : 'viewer';
+            session.requestReferenceSpace(refSpaceType).then((refSpace) => {
+                if (session.isImmersive) {
+                    xrImmersiveRefSpace = refSpace;
+                } else {
+                    inlineViewerHelper = new InlineViewerHelper(gl.canvas, refSpace);
                 }
-
-                session.requestAnimationFrame(() => startXR());
+                session.requestAnimationFrame(onXRFrame);
             });
         }
-    </script>
-</body>
-</html>
+
+        function onEndSession(session) {
+            session.end();
+        }
+
+        function onSessionEnded(event) {
+            if (event.session.isImmersive) {
+                xrButton.setSession(null);
+                skybox.visible = true;
+            }
+        }
+
+        function onXRFrame(t, frame) {
+            let session = frame.session;
+            let refSpace = session.isImmersive ?
+                            xrImmersiveRefSpace :
+                            inlineViewerHelper.referenceSpace;
+            let pose = frame.getViewerPose(refSpace);
+
+            scene.startFrame();
+
+            session.requestAnimationFrame(onXRFrame);
+
+            scene.drawXRFrame(frame, pose);
+
+            scene.endFrame();
+        }
+
+        let cameraOrientationElement = document.getElementById('cameraOrientation');
+
+        function updateCameraOrientation() {
+            const orientation = scene.camera.rotation;
+            cameraOrientationElement.innerText = `Camera Orientation: ${orientation.x.toFixed(2)}, ${orientation.y.toFixed(2
