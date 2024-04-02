@@ -22,10 +22,10 @@
     document.addEventListener('DOMContentLoaded', function () {
       // Get the a-marker-camera entity
       const markerCamera = document.querySelector('a-marker-camera');
-      
+
       // Log the camera's position every second
       setInterval(() => {
-        const cameraPosition = markerCamera.object3D.getWorldPosition();
+        const cameraPosition = markerCamera.object3D.position;
         console.log('Camera position:', cameraPosition);
       }, 1000);
     });
