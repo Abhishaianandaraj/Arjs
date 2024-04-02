@@ -54,11 +54,8 @@
 
             window.addEventListener('resize', onWindowResize, false);
 
-            // Wait for the XR session to be established
-            renderer.xr.addEventListener('sessionstart', () => {
-                // Call updateCameraPosition every second
-                setInterval(updateCameraPosition, 1000);
-            });
+            // Call updateCameraPosition every second
+            setInterval(updateCameraPosition, 1000);
         }
 
         function onWindowResize() {
@@ -80,24 +77,14 @@
         function updateCameraPosition() {
             const cameraPosition = camera.position;
             const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
-
-            // Check if in XR session
-            if (renderer.xr.isPresenting) {
-                // Create a new div element
-                const overlayDiv = document.createElement('div');
-                overlayDiv.innerText = formattedPosition;
-                overlayDiv.style.position = 'absolute';
-                overlayDiv.style.top = '10px';
-                overlayDiv.style.left = '10px';
-                overlayDiv.style.color = 'white';
-
-                // Append the div to the XR session's DOM overlay
-                renderer.xr.getSession().then(session => {
-                    session.domOverlayState.element.appendChild(overlayDiv);
-                });
-            }
+            
+            // Display camera position in the console
+            console.log(formattedPosition);
         }
     </script>
+
+    <!-- Display camera position -->
+    <div id="cameraPosition" style="position: fixed; top: 10px; left: 10px; color: white;"></div>
 </body>
 
 </html>
