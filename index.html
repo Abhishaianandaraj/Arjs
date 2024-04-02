@@ -6,11 +6,29 @@
 </head>
 <body style="margin: 0px; overflow: hidden;">
   <a-scene embedded arjs>
-    <!-- Camera setup -->
-    <a-marker-camera preset="hiro"></a-marker-camera>
-
-    <!-- Content to display when the marker is detected -->
-    <a-box position="0 0.5 0" material="color: red;"></a-box>
+    <!-- Place the model on a marker -->
+    <a-marker-camera preset="hiro">
+      <a-entity
+        id="gltfModel"
+        scale="0.05 0.05 0.05"
+        gltf-model="models/scene.gltf"
+        visible="true"
+        position="0 0 0" <!-- Adjust the position here -->
+      ></a-entity>
+    </a-marker-camera>
   </a-scene>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Get the a-marker-camera entity
+      const markerCamera = document.querySelector('a-marker-camera');
+      
+      // Log the camera's position every second
+      setInterval(() => {
+        const cameraPosition = markerCamera.object3D.getWorldPosition();
+        console.log('Camera position:', cameraPosition);
+      }, 1000);
+    });
+  </script>
 </body>
 </html>
