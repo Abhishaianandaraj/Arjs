@@ -17,16 +17,12 @@
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js"></script>
-    <script src="https://rawgit.com/andypotato/three-marker/master/build/three-marker.js"></script>
 </head>
 
 <body>
     <script type="module">
         let camera, scene, renderer;
         let mesh;
-
-        init();
-        animate();
 
         async function init() {
             const container = document.createElement('div');
@@ -57,40 +53,60 @@
             mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
 
-            // Initialize marker controls
-            const markerControls = new THREEx.ArMarkerControls();
-            markerControls.addEventListener('markerFound', (event) => {
-                // Adjust the position of the mesh to appear on top of the marker
-                mesh.position.copy(event.data.markerObject.position);
-                mesh.position.y += 0.1; // Adjust height if necessary
-                mesh.visible = true;
-            });
-            markerControls.addEventListener('markerLost', (event) => {
-                mesh.visible = false;
-            });
+            // Request XR Session with image tracking
+            try {
+                const img = document.getElementById('img');
+                const imgBitmap = await createImageBitmap(img);
+                const sessionInit = {
+                    requiredFeatures: ['image-tracking'],
+                    trackedImages: [
+                        {
+                            image: imgBitmap,
+                            widthInMeters: 0.2
+                        }
+                    ]
+                };
+                const session = await navigator.xr.requestSession('immersive-ar', sessionInit);
 
-            // Add a marker
-            const markerUrl = 'pattern-marker.patt';
-            markerControls.addMarker(markerUrl);
-
-            window.addEventListener('resize', onWindowResize, false);
+                // Start tracking loop
+                session.addEventListener('end', () => {
+                    // Handle session end
+                });
+                session.requestAnimationFrame(onXRFrame);
+            } catch (error) {
+                console.error('Error starting XR session:', error);
+            }
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+        async function onXRFrame(timestamp, xrFrame) {
+            const results = xrFrame.getImageTrackingResults();
+            for (const result of results) {
+                const imageIndex = result.index;
+                const pose = xrFrame.getPose(result.imageSpace, xrFrame.session.referenceSpace);
+                const state = result.trackingState;
 
-            renderer.setSize(window.innerWidth, window.innerHeight);
+                if (state == "tracked") {
+                    // Image is actively tracked
+                    // Update mesh position based on pose
+                    mesh.position.copy(pose.transform.position);
+                    mesh.quaternion.copy(pose.transform.orientation);
+                    mesh.visible = true;
+                } else if (state == "emulated") {
+                    // Image is not actively tracked but was recently seen
+                    // Adjust mesh visibility or position as needed
+                    mesh.visible = false;
+                }
+            }
+
+            // Continue tracking loop
+            xrFrame.session.requestAnimationFrame(onXRFrame);
         }
 
-        function animate() {
-            renderer.setAnimationLoop(render);
-        }
-
-        function render() {
-            renderer.render(scene, camera);
-        }
+        init();
     </script>
+
+    <!-- Placeholder for the image to be tracked -->
+    <img id="img" src="HIRO.jpg" style="display: none;">
 </body>
 
 </html>
