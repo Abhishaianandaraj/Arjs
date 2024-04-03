@@ -53,28 +53,35 @@
             mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
 
-            // Request XR Session with image tracking
             try {
-                const img = document.getElementById('img');
-                const imgBitmap = await createImageBitmap(img);
-                const sessionInit = {
-                    requiredFeatures: ['image-tracking'],
-                    trackedImages: [
-                        {
-                            image: imgBitmap,
-                            widthInMeters: 0.2
-                        }
-                    ]
-                };
-                const session = await navigator.xr.requestSession('immersive-ar', sessionInit);
-
-                // Start tracking loop
-                session.addEventListener('end', () => {
-                    // Handle session end
-                });
-                session.requestAnimationFrame(onXRFrame);
+                // Check if immersive AR session is supported
+                const isSupported = await navigator.xr.isSessionSupported('immersive-ar');
+                if (isSupported) {
+                    // Request immersive AR session
+                    const img = document.getElementById('img');
+                    const imgBitmap = await createImageBitmap(img);
+                    const sessionInit = {
+                        requiredFeatures: ['image-tracking'],
+                        trackedImages: [
+                            {
+                                image: imgBitmap,
+                                widthInMeters: 0.2
+                            }
+                        ]
+                    };
+                    const session = await navigator.xr.requestSession('immersive-ar', sessionInit);
+                    // Start tracking loop
+                    session.requestAnimationFrame(onXRFrame);
+                } else {
+                    // Fallback to inline session or handle lack of XR support
+                    console.error('Immersive AR session is not supported.');
+                    // Attempt to request an inline session
+                    const inlineSession = await navigator.xr.requestSession('inline');
+                    // Handle inline session (if needed)
+                }
             } catch (error) {
                 console.error('Error starting XR session:', error);
+                // Handle error
             }
         }
 
@@ -106,7 +113,7 @@
     </script>
 
     <!-- Placeholder for the image to be tracked -->
-    <img id="img" src="HIRO.jpg" style="display: none;">
+    <img id="img" src="path/to/your-image.jpg" style="display: none;">
 </body>
 
 </html>
