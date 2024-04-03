@@ -2,24 +2,33 @@
 <html lang="en">
 
 <head>
-    <title>Basic Scene with WebXR</title>
+    <title>Basic Scene with Image Tracking</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link type="text/css" rel="stylesheet" href="common.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js"></script>
+    <script src="https://rawgit.com/andypotato/three-marker/master/build/three-marker.js"></script>
 </head>
 
 <body>
     <script type="module">
-        import { ARButton } from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js';
-
         let camera, scene, renderer;
         let mesh;
 
         init();
         animate();
 
-        function init() {
+        async function init() {
             const container = document.createElement('div');
             document.body.appendChild(container);
 
@@ -30,8 +39,7 @@
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            container.appendChild(renderer.domElement);
+            document.body.appendChild(renderer.domElement);
 
             var light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
             light.position.set(0.5, 1, 0.25);
@@ -47,15 +55,25 @@
             });
 
             mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(0, 0.3, -1);
             scene.add(mesh);
 
-            document.body.appendChild(ARButton.createButton(renderer));
+            // Initialize marker controls
+            const markerControls = new THREEx.ArMarkerControls();
+            markerControls.addEventListener('markerFound', (event) => {
+                // Adjust the position of the mesh to appear on top of the marker
+                mesh.position.copy(event.data.markerObject.position);
+                mesh.position.y += 0.1; // Adjust height if necessary
+                mesh.visible = true;
+            });
+            markerControls.addEventListener('markerLost', (event) => {
+                mesh.visible = false;
+            });
+
+            // Add a marker
+            const markerUrl = 'pattern-marker.patt';
+            markerControls.addMarker(markerUrl);
 
             window.addEventListener('resize', onWindowResize, false);
-
-            // Call updateCameraPosition every second
-            setInterval(updateCameraPosition, 1000);
         }
 
         function onWindowResize() {
@@ -72,19 +90,7 @@
         function render() {
             renderer.render(scene, camera);
         }
-
-        // Function to update camera position and display it
-        function updateCameraPosition() {
-            const cameraPosition = camera.position;
-            const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
-            
-            // Display camera position in the console
-            console.log(formattedPosition);
-        }
     </script>
-
-    <!-- Display camera position -->
-    <div id="cameraPosition" style="position: fixed; top: 10px; left: 10px; color: white;"></div>
 </body>
 
 </html>
