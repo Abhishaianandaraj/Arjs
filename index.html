@@ -44,7 +44,7 @@
 
             const imgMarkerHiro = document.getElementById('imgMarkerHiro');
             const imgMarkerHiroBitmap = await createImageBitmap(imgMarkerHiro);
-            const button = ARButton.createButton(renderer, {
+            const button = THREE.ARButton.createButton(renderer, {
                 requiredFeatures: ['image-tracking'],
                 trackedImages: [
                     { image: imgMarkerHiroBitmap, widthInMeters: 0.2 }
