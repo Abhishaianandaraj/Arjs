@@ -1,109 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>Basic Scene with WebXR</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Application</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
         }
-
         #scene-container {
             width: 100%;
             height: 100vh;
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
 </head>
-
 <body>
     <div id="scene-container"></div>
-    <script type="module">
-        import { ARButton } from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js';
-
+    <img id="imgMarkerHiro" src="HIRO.jpg" style="display: none;">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/examples/jsm/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/examples/jsm/webxr/ARButton.js"></script>
+    <script>
         let camera, scene, renderer;
-        let mesh;
+        let hiroMarkerMesh;
 
         init();
-        animate();
 
-        function init() {
-            const container = document.querySelector('#scene-container');
-
+        async function init() {
             scene = new THREE.Scene();
-
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
-
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.setAnimationLoop(render);
             renderer.xr.enabled = true;
+            const container = document.querySelector('#scene-container');
             container.appendChild(renderer.domElement);
 
-            var light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-            light.position.set(0.5, 1, 0.25);
-            scene.add(light);
+            const ambient = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+            ambient.position.set(0.5, 1, 0.25);
+            scene.add(ambient);
 
-            const geometry = new THREE.IcosahedronGeometry(0.1, 1);
-            const material = new THREE.MeshPhongMaterial({
-                color: new THREE.Color("rgb(226,35,213)"),
-                shininess: 6,
-                flatShading: true,
-                transparent: 1,
-                opacity: 0.8
+            const imgMarkerHiro = document.getElementById('imgMarkerHiro');
+            const imgMarkerHiroBitmap = await createImageBitmap(imgMarkerHiro);
+            const button = document.createElement('button');
+            button.textContent = 'Enter AR';
+            button.style.position = 'absolute';
+            button.style.top = '10px';
+            button.style.left = '10px';
+            button.addEventListener('click', function () {
+                if (imgMarkerHiroBitmap) {
+                    renderer.xr.isPresenting ? renderer.xr.getSession().end() : renderer.xr.requestSession('immersive-ar', {
+                        requiredFeatures: ['image-tracking'],
+                        optionalFeatures: ['dom-overlay'],
+                        domOverlay: { root: document.body },
+                        domOverlaySpace: renderer.xr.getReferenceSpace()
+                    });
+                }
             });
+            document.body.appendChild(button);
 
-            mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(0, 0, -0.5);
-            scene.add(mesh);
+            const hiroMarkerGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+            hiroMarkerGeometry.translate(0, 0.1, 0);
+            const hiroMarkerMaterial = new THREE.MeshNormalMaterial({
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
+            hiroMarkerMesh = new THREE.Mesh(hiroMarkerGeometry, hiroMarkerMaterial);
+            hiroMarkerMesh.name = 'HiroMarkerCube';
+            hiroMarkerMesh.matrixAutoUpdate = false;
+            hiroMarkerMesh.visible = false;
+            scene.add(hiroMarkerMesh);
 
-            // Create an image element for the image you want to track
-            const imgMarker = document.createElement('img');
-            imgMarker.src = 'HIRO.jpg'; // Replace 'path_to_your_image.jpg' with the path to your image
-            imgMarker.style.display = 'none'; // Hide the image
-
-            document.body.appendChild(ARButton.createButton(renderer, {
-                // Configure image tracking
-                requiredFeatures: ['image-tracking'],
-                trackedImages: [{ src: imgMarker }],
-            }));
-
-            window.addEventListener('resize', onWindowResize, false);
-
-            // Call updateCamera every second
-            setInterval(updateCamera, 1000);
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
         }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
+        function render(timestamp, frame) {
+            const results = frame.getImageTrackingResults();
+            console.log(results);
+            for (const result of results) {
+                const imageIndex = result.index;
+                const referenceSpace = renderer.xr.getReferenceSpace();
+                const pose = frame.getPose(result.imageSpace, referenceSpace);
+                const state = result.trackingState;
+                console.log(state);
 
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
-        function animate() {
-            renderer.setAnimationLoop(render);
-        }
-
-        function render() {
-            renderer.render(scene, camera);
-        }
-
-        // Function to update camera position and rotation and display them
-        function updateCamera() {
-            const cameraPosition = camera.position;
-            const cameraRotation = camera.rotation;
-            const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
-            const formattedRotation = `Camera Rotation: (${cameraRotation.x.toFixed(2)}, ${cameraRotation.y.toFixed(2)}, ${cameraRotation.z.toFixed(2)})`;
-
-            // Display camera position and rotation in the console
-            console.log(formattedPosition);
-            console.log(formattedRotation);
+                if (state === 'tracked') {
+                    console.log('ImageIndex:', imageIndex);
+                    if (imageIndex === 0) {
+                        hiroMarkerMesh.visible = true;
+                        hiroMarkerMesh.matrix.fromArray(pose.transform.matrix);
+                        console.log('Hiro Image target has been found', hiroMarkerMesh.position);
+                    }
+                } else if (state === 'emulated') {
+                    console.log('Image target no longer seen');
+                }
+            }
         }
     </script>
 </body>
-
 </html>
