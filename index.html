@@ -33,7 +33,7 @@
             renderer.xr.enabled = true;
             container.appendChild(renderer.domElement);
 
-            var light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
             light.position.set(0.5, 1, 0.25);
             scene.add(light);
 
@@ -71,6 +71,10 @@
             window.addEventListener('resize', onWindowResize, false);
         }
 
+        function animate() {
+            renderer.setAnimationLoop(render);
+        }
+
         function render(timestamp, frame) {
             if (frame) {
                 const results = frame.getHitTestResults();
@@ -94,8 +98,11 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        function animate() {
-            renderer.setAnimationLoop(render);
+        // Function to update camera position and display it
+        function updateCameraPosition() {
+            const cameraPosition = camera.position;
+            const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
+            document.getElementById('cameraPosition').innerText = formattedPosition;
         }
     </script>
 
