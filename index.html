@@ -25,7 +25,7 @@
 
             scene = new THREE.Scene();
 
-            //camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setPixelRatio(window.devicePixelRatio);
@@ -55,7 +55,7 @@
             window.addEventListener('resize', onWindowResize, false);
 
             // Call updateCameraPosition every second
-            //setInterval(updateCameraPosition, 1000);
+            setInterval(updateCameraPosition, 1000);
         }
 
         function onWindowResize() {
@@ -70,17 +70,17 @@
         }
 
         function render() {
-            renderer.render(scene);
+            renderer.render(scene,camera);
         }
 
         // Function to update camera position and display it
-        /* function updateCameraPosition() {
+         function updateCameraPosition() {
             const cameraPosition = camera.position;
             const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
             
             // Display camera position in the console
             console.log(formattedPosition);
-        }*/
+        }
     </script>
 
     <!-- Display camera position -->
