@@ -9,8 +9,6 @@
 </head>
 <body>
   <script type="module">
-    import { ARButton } from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js';
-
     let camera, scene, renderer;
     let hiroMarkerMesh, objectMesh;
 
@@ -27,7 +25,6 @@
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true;
       container.appendChild(renderer.domElement);
 
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
@@ -37,19 +34,53 @@
       const imgMarkerHiro = document.getElementById("imgMarkerHiro");
       const imgMarkerHiroBitmap = await createImageBitmap(imgMarkerHiro);
 
-      const button = ARButton.createButton(renderer, {
-        trackedImages: [
-          {
-            image: imgMarkerHiroBitmap,
-            widthInMeters: 0.2,
-          },
-        ],
-        optionalFeatures: ["dom-overlay"],
-        domOverlay: {
-          root: document.body,
-        },
+      // Set up the WebXR session
+      navigator.xr.requestSession('immersive-ar', {
+        requiredFeatures: ['hit-test'],
+        optionalFeatures: ['dom-overlay'],
+        domOverlay: { root: document.body },
+      }).then((session) => {
+        session.addEventListener('select', () => {
+          console.log('Select event triggered');
+        });
+
+        session.addEventListener('selectstart', () => {
+          console.log('SelectStart event triggered');
+        });
+
+        session.addEventListener('selectend', () => {
+          console.log('SelectEnd event triggered');
+        });
+
+        session.addEventListener('checkedfeatureschange', () => {
+          console.log('CheckedFeaturesChange event triggered');
+        });
+
+        const referenceSpace = session.requestReferenceSpace('local');
+
+        function handleHitTest(frame) {
+          const results = frame.getHitTestResults(referenceSpace);
+          for (const result of results) {
+            const pose = result.getPose(referenceSpace);
+            if (pose) {
+              hiroMarkerMesh.visible = true;
+              hiroMarkerMesh.matrix.fromArray(pose.transform.matrix);
+
+              objectMesh.visible = true;
+              objectMesh.position.copy(hiroMarkerMesh.position);
+              objectMesh.rotation.copy(hiroMarkerMesh.rotation);
+            }
+          }
+        }
+
+        function onXRFrame(time, frame) {
+          session.requestAnimationFrame(onXRFrame);
+          handleHitTest(frame);
+          renderer.render(scene, camera);
+        }
+
+        session.requestAnimationFrame(onXRFrame);
       });
-      document.body.appendChild(button);
 
       const hiroMarkerGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
       hiroMarkerGeometry.translate(0, 0.1, 0);
@@ -74,25 +105,6 @@
       window.addEventListener('resize', onWindowResize, false);
     }
 
-    function render(timestamp, frame) {
-      if (frame) {
-        const results = frame.getHitTestResults();
-        for (const result of results) {
-          const pose = result.getPose(renderer.xr.getReferenceSpace());
-          if (pose) {
-            hiroMarkerMesh.visible = true;
-            hiroMarkerMesh.matrix.fromArray(pose.transform.matrix);
-
-            objectMesh.visible = true;
-            objectMesh.position.copy(hiroMarkerMesh.position);
-            objectMesh.rotation.copy(hiroMarkerMesh.rotation);
-          }
-        }
-      }
-
-      renderer.render(scene, camera);
-    }
-
     function onWindowResize() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -100,12 +112,12 @@
     }
 
     function animate() {
-      renderer.setAnimationLoop(render);
+      requestAnimationFrame(animate);
     }
   </script>
 
   <!-- Add your image here -->
-  <img id="imgMarkerHiro" src="HIRO.jpg" style="display: none;" />
+  <img id="imgMarkerHiro" src="your-image-url.jpg" style="display: none;" />
 
   <!-- Display camera position -->
   <div id="cameraPosition" style="position: fixed; top: 10px; left: 10px; color: white;"></div>
