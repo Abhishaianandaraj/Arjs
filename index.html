@@ -1,91 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <title>Basic Scene with WebXR</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link type="text/css" rel="stylesheet" href="common.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
+  <title>Basic Scene with WebXR</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link type="text/css" rel="stylesheet" href="common.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
 </head>
-
 <body>
-    <script type="module">
-        import { ARButton } from './ARButton.js';
+  <script type="module">
+    import { ARButton } from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js';
 
-        let camera, scene, renderer;
-        let mesh;
+    let camera, scene, renderer;
+    let hiroMarkerMesh, objectMesh;
 
-        init();
-        animate();
+    init();
+    animate();
 
-        function init() {
-            const container = document.createElement('div');
-            document.body.appendChild(container);
+    async function init() {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
 
-            scene = new THREE.Scene();
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
 
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.xr.enabled = true;
+      container.appendChild(renderer.domElement);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.xr.enabled = true;
-            container.appendChild(renderer.domElement);
+      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+      light.position.set(0.5, 1, 0.25);
+      scene.add(light);
 
-            var light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-            light.position.set(0.5, 1, 0.25);
-            scene.add(light);
+      const imgMarkerHiro = document.getElementById("imgMarkerHiro");
+      const imgMarkerHiroBitmap = await createImageBitmap(imgMarkerHiro);
 
-            const geometry = new THREE.IcosahedronGeometry(0.1, 1);
-            const material = new THREE.MeshPhongMaterial({
-                color: new THREE.Color("rgb(226,35,213)"),
-                shininess: 6,
-                flatShading: true,
-                transparent: 1,
-                opacity: 0.8
-            });
+      const button = ARButton.createButton(renderer, {
+        trackedImages: [
+          {
+            image: imgMarkerHiroBitmap,
+            widthInMeters: 0.2,
+          },
+        ],
+        optionalFeatures: ["dom-overlay"],
+        domOverlay: {
+          root: document.body,
+        },
+      });
+      document.body.appendChild(button);
 
-            mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(0, 0, -0.5);
-            scene.add(mesh);
+      const hiroMarkerGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+      hiroMarkerGeometry.translate(0, 0.1, 0);
+      const hiroMarkerMaterial = new THREE.MeshNormalMaterial({
+        transparent: true,
+        opacity: 0.5,
+        side: THREE.DoubleSide,
+      });
+      hiroMarkerMesh = new THREE.Mesh(hiroMarkerGeometry, hiroMarkerMaterial);
+      hiroMarkerMesh.name = "HiroMarkerCube";
+      hiroMarkerMesh.matrixAutoUpdate = false;
+      hiroMarkerMesh.visible = false;
+      scene.add(hiroMarkerMesh);
 
-            document.body.appendChild(ARButton.createButton(renderer));
+      const objectGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+      const objectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+      objectMesh = new THREE.Mesh(objectGeometry, objectMaterial);
+      objectMesh.name = "PlacedObject";
+      objectMesh.visible = false;
+      scene.add(objectMesh);
 
-            window.addEventListener('resize', onWindowResize, false);
+      window.addEventListener('resize', onWindowResize, false);
+    }
 
-            // Call updateCameraPosition every second
-            setInterval(updateCameraPosition, 1000);
+    function render(timestamp, frame) {
+      if (frame) {
+        const results = frame.getHitTestResults();
+        for (const result of results) {
+          const pose = result.getPose(renderer.xr.getReferenceSpace());
+          if (pose) {
+            hiroMarkerMesh.visible = true;
+            hiroMarkerMesh.matrix.fromArray(pose.transform.matrix);
+
+            objectMesh.visible = true;
+            objectMesh.position.copy(hiroMarkerMesh.position);
+            objectMesh.rotation.copy(hiroMarkerMesh.rotation);
+          }
         }
+      }
 
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            console.log(camera.updateProjectionMatrix());
+      renderer.render(scene, camera);
+    }
 
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 
-        function animate() {
-            renderer.setAnimationLoop(render);
-        }
+    function animate() {
+      renderer.setAnimationLoop(render);
+    }
+  </script>
 
-        function render() {
-            renderer.render(scene,camera);
-        }
+  <!-- Add your image here -->
+  <img id="imgMarkerHiro" src="your-image-url.jpg" style="display: none;" />
 
-        // Function to update camera position and display it
-         function updateCameraPosition() {
-            const cameraPosition = camera.position;
-            const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
-            
-            // Display camera position in the console
-            console.log(formattedPosition);
-        }
-    </script>
-
-    <!-- Display camera position -->
-    <div id="cameraPosition" style="position: fixed; top: 10px; left: 10px; color: white;"></div>
+  <!-- Display camera position -->
+  <div id="cameraPosition" style="position: fixed; top: 10px; left: 10px; color: white;"></div>
 </body>
-
 </html>
