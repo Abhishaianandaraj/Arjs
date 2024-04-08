@@ -1,75 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AR.js Hiro Marker Detection</title>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/AR.js/2.0.8/aframe/build/aframe-ar.js"></script>
+    <title>Basic Scene with WebXR</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link type="text/css" rel="stylesheet" href="common.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
 </head>
+
 <body>
-    <a-scene embedded arjs="detectionMode: mono_and_matrix; matrixCodeType: hiro">
-        <a-marker id="hiro-marker" emitevents="true">
-            <!-- A box representing the marker -->
-            <a-box position="0 0 0" material="color: red;"></a-box>
-        </a-marker>
-        <a-entity camera></a-entity>
-    </a-scene>
+    <script type="module">
+        import { ARButton } from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js';
 
-    <!-- WebXR AR button -->
-    <button id="xr-ar-button" style="display: none; position: absolute; top: 10px; left: 10px;">Start AR</button>
+        let camera, scene, renderer;
+        let markerPosition;
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const hiroMarker = document.getElementById('hiro-marker');
-            const xrARButton = document.getElementById('xr-ar-button');
-            let markerPosition;
+        init();
+        animate();
+
+        function init() {
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            var light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+            light.position.set(0.5, 1, 0.25);
+            scene.add(light);
+
+            const geometry = new THREE.IcosahedronGeometry(0.1, 1);
+            const material = new THREE.MeshPhongMaterial({
+                color: new THREE.Color("rgb(226,35,213)"),
+                shininess: 6,
+                flatShading: true,
+                transparent: 1,
+                opacity: 0.8
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(0, 0, -0.5);
+            scene.add(mesh);
+
+            window.addEventListener('resize', onWindowResize, false);
 
             // Listen for markerFound event
-            hiroMarker.addEventListener('markerFound', function () {
-                console.log('Hiro marker found.');
-                xrARButton.style.display = 'block'; // Show the WebXR AR button
+            document.addEventListener('markerFound', function () {
+                console.log('Marker detected.');
+                renderer.domElement.parentElement.appendChild(ARButton.createButton(renderer)); // Add AR button
             });
 
             // Listen for markerLost event
-            hiroMarker.addEventListener('markerLost', function () {
-                console.log('Hiro marker lost.');
-                xrARButton.style.display = 'none'; // Hide the WebXR AR button
+            document.addEventListener('markerLost', function () {
+                console.log('Marker lost.');
+                const arButton = document.getElementById('ARButton');
+                if (arButton) {
+                    arButton.remove(); // Remove AR button if it exists
+                }
             });
 
-            // Listen for WebXR AR button click
-            xrARButton.addEventListener('click', function () {
-                startXRARSession(markerPosition);
-            });
+            // Function to update camera position and display it
+            setInterval(updateCameraPosition, 1000);
+        }
 
-            function startXRARSession(position) {
-                if (navigator.xr) {
-                    navigator.xr.requestSession('immersive-ar', {
-                        requiredFeatures: ['dom-overlay']
-                    }).then(function (session) {
-                        console.log('WebXR AR session started. Marker position:', position);
-                        session.requestAnimationFrame(onXRFrame);
-                    }).catch(function (error) {
-                        console.error('Failed to start WebXR AR session:', error);
-                    });
-                } else {
-                    console.error('WebXR not supported');
-                }
-            }
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
 
-            function onXRFrame(time, frame) {
-                if (markerPosition === undefined) {
-                    markerPosition = hiroMarker.object3D.position;
-                }
-                
-                // Adjust the position of the box to match the marker position
-                const box = document.querySelector('a-box');
-                box.setAttribute('position', markerPosition);
-                
-                // Request next animation frame
-                frame.session.requestAnimationFrame(onXRFrame);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            renderer.setAnimationLoop(render);
+        }
+
+        function render() {
+            renderer.render(scene, camera);
+        }
+
+        // Function to update camera position and display it
+        function updateCameraPosition() {
+            const cameraPosition = camera.position;
+            const formattedPosition = `Camera Position: (${cameraPosition.x.toFixed(2)}, ${cameraPosition.y.toFixed(2)}, ${cameraPosition.z.toFixed(2)})`;
+            document.getElementById('cameraPosition').innerText = formattedPosition;
+        }
+
+        // Listen for AR button click
+        document.addEventListener('click', function (event) {
+            const arButton = document.getElementById('ARButton');
+            if (arButton && event.target === arButton) {
+                startARSession(markerPosition);
             }
         });
+
+        function startARSession(position) {
+            if (navigator.xr) {
+                navigator.xr.requestSession('immersive-ar', {
+                    requiredFeatures: ['dom-overlay']
+                }).then(function (session) {
+                    console.log('WebXR AR session started. Marker position:', position);
+                    session.requestAnimationFrame(onXRFrame);
+                }).catch(function (error) {
+                    console.error('Failed to start WebXR AR session:', error);
+                });
+            } else {
+                console.error('WebXR not supported');
+            }
+        }
+
+        function onXRFrame(time, frame) {
+            // Adjust the position of the box to match the marker position
+            const box = scene.children.find(child => child instanceof THREE.Mesh);
+            if (box && markerPosition) {
+                box.position.copy(markerPosition);
+            }
+
+            // Request next animation frame
+            frame.session.requestAnimationFrame(onXRFrame);
+        }
     </script>
+
+    <!-- Display camera position -->
+    <div id="cameraPosition" style="position: fixed; top: 10px; left: 10px; color: white;"></div>
+
+    <!-- AR button will be added dynamically -->
 </body>
-</html>
+
+</html
