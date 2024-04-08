@@ -51,7 +51,8 @@
 
             // Listen for markerFound event
             document.addEventListener('markerFound', function (event) {
-                console.log('Marker detected.');
+                console.log(`Marker detected at ${markerPosition}.`);
+                
                 const arButton = ARButton.createButton(renderer); // Create AR button
                 arButton.addEventListener('click', function () {
                     startARSession(markerPosition);
