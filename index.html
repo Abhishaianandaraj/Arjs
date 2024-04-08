@@ -23,10 +23,11 @@
         document.addEventListener('DOMContentLoaded', function () {
             const hiroMarker = document.getElementById('hiro-marker');
             const xrARButton = document.getElementById('xr-ar-button');
+            let markerPosition;
 
             // Listen for markerFound event
             hiroMarker.addEventListener('markerFound', function () {
-                console.log('Hiro marker found at position:', hiroMarker.object3D.position);
+                console.log('Hiro marker found.');
                 xrARButton.style.display = 'block'; // Show the WebXR AR button
             });
 
@@ -38,15 +39,15 @@
 
             // Listen for WebXR AR button click
             xrARButton.addEventListener('click', function () {
-                startXRARSession();
+                startXRARSession(markerPosition);
             });
 
-            function startXRARSession() {
+            function startXRARSession(position) {
                 if (navigator.xr) {
                     navigator.xr.requestSession('immersive-ar', {
                         requiredFeatures: ['dom-overlay']
                     }).then(function (session) {
-                        console.log('WebXR AR session started.');
+                        console.log('WebXR AR session started. Marker position:', position);
                         session.requestAnimationFrame(onXRFrame);
                     }).catch(function (error) {
                         console.error('Failed to start WebXR AR session:', error);
@@ -57,9 +58,10 @@
             }
 
             function onXRFrame(time, frame) {
-                // Retrieve the position of the marker
-                const markerPosition = hiroMarker.object3D.position;
-                console.log(markerPosition);
+                if (markerPosition === undefined) {
+                    markerPosition = hiroMarker.object3D.position;
+                }
+                
                 // Adjust the position of the box to match the marker position
                 const box = document.querySelector('a-box');
                 box.setAttribute('position', markerPosition);
