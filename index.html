@@ -1,125 +1,165 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Basic Scene with WebXR</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <link type="text/css" rel="stylesheet" href="common.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
-</head>
-<body>
-  <script type="module">
-    let camera, scene, renderer;
-    let hiroMarkerMesh, objectMesh;
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<!-- three.js library -->
+<script src='vendor/three.js/build/three.min.js'></script>
+<!-- ar.js -->
+<script src="../build/ar.js"></script>
+<script>THREEx.ArToolkitContext.baseURL = '../'</script>
 
-    init();
-    animate();
+<body style='margin : 0px; overflow: hidden; font-family: Monospace;'><div style='position: absolute; top: 10px; width:100%; text-align: center; z-index: 1;'>
+	<a href="https://github.com/AR-js-org/AR.js/" target="_blank">AR.js</a> - three.js camera transform
+	<br/>
+	Contact me any time at <a href='https://twitter.com/nicolocarp' target='_blank'>@nicolocarp</a>
+</div><script>
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Init
+	//////////////////////////////////////////////////////////////////////////////////
 
-    async function init() {
-      const container = document.createElement('div');
-      document.body.appendChild(container);
+	// init renderer
+	var renderer	= new THREE.WebGLRenderer({
+		antialias: true,
+		alpha: true
+	});
+	renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+	renderer.setSize( 640, 480 );
+	renderer.domElement.style.position = 'absolute'
+	renderer.domElement.style.top = '0px'
+	renderer.domElement.style.left = '0px'
+	document.body.appendChild( renderer.domElement );
 
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 40);
+	// array of functions for the rendering loop
+	var onRenderFcts= [];
 
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      container.appendChild(renderer.domElement);
+	// init scene and camera
+	var scene	= new THREE.Scene();
 
-      const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      light.position.set(0.5, 1, 0.25);
-      scene.add(light);
+	//////////////////////////////////////////////////////////////////////////////////
+	//		Initialize a basic camera
+	//////////////////////////////////////////////////////////////////////////////////
 
-      const imgMarkerHiro = document.getElementById("imgMarkerHiro");
-      const imgMarkerHiroBitmap = await createImageBitmap(imgMarkerHiro);
+	// Create a camera
+	var camera = new THREE.Camera();
+	scene.add(camera);
 
-      // Set up the WebXR session
-      navigator.xr.requestSession('immersive-ar', {
-        requiredFeatures: ['hit-test'],
-        optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: document.body },
-      }).then((session) => {
-        session.addEventListener('select', () => {
-          console.log('Select event triggered');
-        });
+	////////////////////////////////////////////////////////////////////////////////
+	//          handle arToolkitSource
+	////////////////////////////////////////////////////////////////////////////////
 
-        session.addEventListener('selectstart', () => {
-          console.log('SelectStart event triggered');
-        });
+	var arToolkitSource = new THREEx.ArToolkitSource({
+		// to read from the webcam
+		sourceType : 'webcam',
+	})
 
-        session.addEventListener('selectend', () => {
-          console.log('SelectEnd event triggered');
-        });
+	arToolkitSource.init(function onReady(){
+        // open a the dev console
+				console.log(arToolkitContext.arController);
+				if( arToolkitContext.arController !== null ){
+          // with the listener we listen the incoming messages
+					arToolkitContext.arController.addEventListener('getMarker', function(ev) {
+            // you will see in the console the pos of the marker
+						console.log('marker pos: ', ev.data.marker.pos);
+					});
+				}
+	})
 
-        session.addEventListener('checkedfeatureschange', () => {
-          console.log('CheckedFeaturesChange event triggered');
-        });
+	// handle resize
+	window.addEventListener('resize', function(){
+		onResize()
+    })
 
-        const referenceSpace = session.requestReferenceSpace('local');
+	function onResize(){
+		arToolkitSource.onResizeElement()
+		arToolkitSource.copyElementSizeTo(renderer.domElement)
+		if( arToolkitContext.arController !== null ){
+			arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////////
+	//          initialize arToolkitContext
+	////////////////////////////////////////////////////////////////////////////////
 
-        function handleHitTest(frame) {
-          const results = frame.getHitTestResults(referenceSpace);
-          for (const result of results) {
-            const pose = result.getPose(referenceSpace);
-            if (pose) {
-              hiroMarkerMesh.visible = true;
-              hiroMarkerMesh.matrix.fromArray(pose.transform.matrix);
 
-              objectMesh.visible = true;
-              objectMesh.position.copy(hiroMarkerMesh.position);
-              objectMesh.rotation.copy(hiroMarkerMesh.rotation);
-            }
-          }
-        }
+	// create atToolkitContext
+	var arToolkitContext = new THREEx.ArToolkitContext({
+		cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+		detectionMode: 'mono',
+	})
+	// initialize it
+	arToolkitContext.init(function onCompleted(){
+		// copy projection matrix to camera
+		camera.projectionMatrix.copy( arToolkitContext.getProjectionMatrix() );
+	})
 
-        function onXRFrame(time, frame) {
-          session.requestAnimationFrame(onXRFrame);
-          handleHitTest(frame);
-          renderer.render(scene, camera);
-        }
+	// update artoolkit on every frame
+	onRenderFcts.push(function(){
+		if( arToolkitSource.ready === false )	return
 
-        session.requestAnimationFrame(onXRFrame);
-      });
+		arToolkitContext.update( arToolkitSource.domElement )
 
-      const hiroMarkerGeometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-      hiroMarkerGeometry.translate(0, 0.1, 0);
-      const hiroMarkerMaterial = new THREE.MeshNormalMaterial({
-        transparent: true,
-        opacity: 0.5,
-        side: THREE.DoubleSide,
-      });
-      hiroMarkerMesh = new THREE.Mesh(hiroMarkerGeometry, hiroMarkerMaterial);
-      hiroMarkerMesh.name = "HiroMarkerCube";
-      hiroMarkerMesh.matrixAutoUpdate = false;
-      hiroMarkerMesh.visible = false;
-      scene.add(hiroMarkerMesh);
+		// update scene.visible if the marker is seen
+		scene.visible = camera.visible
+	})
 
-      const objectGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-      const objectMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-      objectMesh = new THREE.Mesh(objectGeometry, objectMaterial);
-      objectMesh.name = "PlacedObject";
-      objectMesh.visible = false;
-      scene.add(objectMesh);
+	////////////////////////////////////////////////////////////////////////////////
+	//          Create a ArMarkerControls
+	////////////////////////////////////////////////////////////////////////////////
 
-      window.addEventListener('resize', onWindowResize, false);
-    }
+	// init controls for camera
+	var markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
+		type : 'pattern',
+		patternUrl : THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro',
+		// as we controls the camera, set changeMatrixMode: 'cameraTransformMatrix'
+		changeMatrixMode: 'cameraTransformMatrix'
+	})
+	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
+	scene.visible = false
 
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
+	//////////////////////////////////////////////////////////////////////////////////
+	//		add an object in the scene
+	//////////////////////////////////////////////////////////////////////////////////
 
-    function animate() {
-      requestAnimationFrame(animate);
-    }
-  </script>
+	// add a torus knot
+	var geometry	= new THREE.CubeGeometry(1,1,1);
+	var material	= new THREE.MeshNormalMaterial({
+		transparent : true,
+		opacity: 0.5,
+		side: THREE.DoubleSide
+	});
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= geometry.parameters.height/2
+	scene.add( mesh );
 
-  <!-- Add your image here -->
-  <img id="imgMarkerHiro" src="HIRO.jpg" style="display: none;" />
+	var geometry	= new THREE.TorusKnotGeometry(0.3,0.1,64,16);
+	var material	= new THREE.MeshNormalMaterial();
+	var mesh	= new THREE.Mesh( geometry, material );
+	mesh.position.y	= 0.5
+	scene.add( mesh );
 
-  <!-- Display camera position -->
-  <div id="cameraPosition" style="position: fixed; top: 10px; left: 10px; color: white;"></div>
-</body>
-</html>
+	onRenderFcts.push(function(delta){
+		mesh.rotation.x += Math.PI*delta
+	})
+
+	//////////////////////////////////////////////////////////////////////////////////
+	//		render the whole thing on the page
+	//////////////////////////////////////////////////////////////////////////////////
+
+	// render the scene
+	onRenderFcts.push(function(){
+		renderer.render( scene, camera );
+	})
+
+	// run the rendering loop
+	var lastTimeMsec= null
+	requestAnimationFrame(function animate(nowMsec){
+		// keep looping
+		requestAnimationFrame( animate );
+		// measure time
+		lastTimeMsec	= lastTimeMsec || nowMsec-1000/60
+		var deltaMsec	= Math.min(200, nowMsec - lastTimeMsec)
+		lastTimeMsec	= nowMsec
+		// call each update function
+		onRenderFcts.forEach(function(onRenderFct){
+			onRenderFct(deltaMsec/1000, nowMsec/1000)
+		})
+	})
+</script></body>
