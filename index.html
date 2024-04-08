@@ -7,9 +7,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <link type="text/css" rel="stylesheet" href="common.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r126/three.js" crossorigin="anonymous"></script>
+    <script src="https://rawgit.com/jeromeetienne/ar.js/master/aframe/build/aframe-ar.js"></script>
 </head>
 
 <body>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        <a-marker id="marker" emitevents="true">
+            <a-box position="0 0 0" material="color: red;"></a-box>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
+
     <script type="module">
         import { ARButton } from 'https://unpkg.com/three@0.126.0/examples/jsm/webxr/ARButton.js';
 
@@ -37,25 +45,16 @@
             light.position.set(0.5, 1, 0.25);
             scene.add(light);
 
-            const geometry = new THREE.IcosahedronGeometry(0.1, 1);
-            const material = new THREE.MeshPhongMaterial({
-                color: new THREE.Color("rgb(226,35,213)"),
-                shininess: 6,
-                flatShading: true,
-                transparent: 1,
-                opacity: 0.8
-            });
-
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.position.set(0, 0, -0.5);
-            scene.add(mesh);
-
             window.addEventListener('resize', onWindowResize, false);
 
             // Listen for markerFound event
-            document.addEventListener('markerFound', function () {
+            document.addEventListener('markerFound', function (event) {
                 console.log('Marker detected.');
-                renderer.domElement.parentElement.appendChild(ARButton.createButton(renderer)); // Add AR button
+                const arButton = ARButton.createButton(renderer); // Create AR button
+                arButton.addEventListener('click', function () {
+                    startARSession(markerPosition);
+                });
+                container.appendChild(arButton); // Add AR button
             });
 
             // Listen for markerLost event
@@ -93,14 +92,6 @@
             document.getElementById('cameraPosition').innerText = formattedPosition;
         }
 
-        // Listen for AR button click
-        document.addEventListener('click', function (event) {
-            const arButton = document.getElementById('ARButton');
-            if (arButton && event.target === arButton) {
-                startARSession(markerPosition);
-            }
-        });
-
         function startARSession(position) {
             if (navigator.xr) {
                 navigator.xr.requestSession('immersive-ar', {
@@ -134,4 +125,4 @@
     <!-- AR button will be added dynamically -->
 </body>
 
-</html
+</html>
